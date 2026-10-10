@@ -45,6 +45,22 @@ Les noms qui commencent par `=`, `+`, `-` ou `@` sont préfixés d'une apostroph
 
 Les guides traduisent les noms chacun à leur façon et ils ne correspondent pas toujours à ceux de ton jeu. Le bouton ✎ à droite de chaque ligne permet de saisir le nom tel qu'il apparaît dans ton jeu (Entrée pour valider, Échap pour annuler, champ vide pour revenir au nom d'origine). Le nom d'origine reste affiché en petit et la recherche trouve les deux. Les noms choisis sont inclus dans l'export CSV (lignes `alias`).
 
+## Page Profits (que cuisiner, que fabriquer)
+
+`profits.html`, accessible par « Profits → » dans la navigation du carnet. Tu saisis ce que tu as (ex. 5 tomates, 4 blés, 3 œufs) et la page propose la combinaison de plats qui rapporte le plus, avec le nombre de chaque.
+
+- **Gain net** : prix du plat moins ce que rapporteraient les ingrédients revendus tels quels. Les confitures, par exemple, valent à peine plus que les fruits bruts, alors qu'un plat comme le Cheesecake ou le Corn Soup dégage un vrai gain. L'objectif peut aussi être la valeur de vente brute des plats.
+- **Qualité des plats** : de 1 à 5 étoiles (multiplicateurs ×1, ×1,5, ×2, ×4, ×8 d'après les guides).
+- **Filtres** : seulement les recettes de ton niveau de cuisine et/ou cochées dans Collections (lus dans le carnet, jamais modifiés).
+- **Prix de revente** : modifiables ligne par ligne. Un prix laissé vide compte 0 (œufs, lait, poissons… dont le prix de revente n'est pas publié). Les plats composés (Picnic Set, Candlelight Dinner, Afternoon Tea) demandent des plats déjà cuisinés : ajoute-les à l'inventaire, section « Plats déjà cuisinés ».
+- **Meubles** : aucun guide ne donne de prix de revente fiable. Les 6 recettes confirmées sont préremplies, tu saisis leur prix, et tu peux ajouter tes propres meubles (« 5 Bois, 2 Pierre »).
+- Le calcul est glouton avec plusieurs essais (graine fixe, résultat stable). C'est une très bonne suggestion, pas une preuve d'optimum.
+- Réglages et inventaire enregistrés dans le navigateur sous la clé `carnet-heartopia-profits-v1` (pas dans l'export CSV).
+
+Fichiers : `profits.html` (page), `profits-data.js` (ingrédients, recettes, prix, à corriger ici), `profits.js` (calcul et affichage), styles à la fin de `style.css`.
+
+Sources des prix : [heartopia.live](https://www.heartopia.live/en/recipes/) (13/07/2026), [heartopia.life](https://heartopia.life/database/recipe-prices/) (28/07/2026), prix d'achat de [heartopia.life](https://heartopia.life/database/ingredients/). Le riz n'existe pas comme ingrédient de recette standard (seulement les zongzi d'événement), il n'est donc pas listé. Les variantes de tartes et de grillades par champignon ont le même prix et sont regroupées.
+
 ## Modifier et améliorer
 
 | Fichier | Rôle |
@@ -53,6 +69,7 @@ Les guides traduisent les noms chacun à leur façon et ils ne correspondent pas
 | `style.css` | Couleurs, polices, mise en page (thème clair et sombre) |
 | `data.js` | Listes : routine, passions, paliers, espèces, recettes |
 | `app.js` | Logique : état, affichage, journal, CSV, navigation |
+| `profits.html`, `profits-data.js`, `profits.js` | Page Profits (voir plus haut) |
 
 - **Corriger un nom ou ajouter une espèce** : édite `data.js`. Chaque entrée s'écrit `"Nom|Détail"`. Un détail qui commence par `Niv. 3` alimente le filtre « à mon niveau de passion ».
 - **Les ticks sont rattachés au nom** de l'espèce. Si tu renommes une entrée dans `data.js`, ajoute son ancien nom dans la fonction `migrate()` de `app.js` pour garder les cases déjà cochées.
