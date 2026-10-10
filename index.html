@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Carnet Heartopia</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <p class="eyebrow">Heartopia · suivi perso</p>
+    <h1>Carnet Heartopia</h1>
+    <p class="lede">Tes passions, tes paliers de bâtisseur, ton inventaire et tes collections au même endroit. Tout ce que tu coches ou modifies est gardé pour la prochaine visite.</p>
+  </header>
+  <nav id="nav" aria-label="Sections du carnet">
+    <a href="#sec-routine" data-go="sec-routine">Routine</a>
+    <a href="#sec-passions" data-go="sec-passions">Passions</a>
+    <a href="#sec-paliers" data-go="sec-paliers">Paliers</a>
+    <a href="#sec-inventaire" data-go="sec-inventaire">Inventaire</a>
+    <a href="#sec-collections" data-go="sec-collections">Collections</a>
+    <a href="#sec-journal" data-go="sec-journal">Journal</a>
+    <a href="#sec-semaine" data-go="sec-semaine">Semaine</a>
+  </nav>
+  <div id="app"></div>
+  <div class="status">
+    <span id="save-state" aria-live="polite"></span>
+    <span>Contenu tiré de guides de la communauté. Vérifie les prix, les niveaux et les listes en jeu, ils changent avec les mises à jour.</span>
+  </div>
+</main>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
