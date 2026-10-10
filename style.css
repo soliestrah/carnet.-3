@@ -126,6 +126,11 @@ section{scroll-margin-top:72px}
 .jday .list>li{align-items:center}
 .tab[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 
+/* Renommer */
+.renf{display:flex;gap:8px;flex:1;min-width:0;flex-wrap:wrap}
+.rin{flex:1 1 160px;min-width:0;height:36px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;padding-inline:10px}
+.renf .btn{height:36px;padding-inline:12px}
+
 /* Sauvegarde CSV */
 .backup{display:flex;flex-direction:column;gap:12px;margin-top:30px;padding-top:22px;border-top:1px solid var(--line)}
 .backup h3{margin:0;font-family:var(--font-display);font-weight:600;font-size:18px}

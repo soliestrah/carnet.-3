@@ -8,7 +8,7 @@
   function fresh(){
     var s = { dg:11,
       levels:{insectes:4, peche:3, jardinage:3, cuisine:2, oiseaux:2},
-      once:{}, daily:{date:ymd(), done:{}}, seen:{}, custom:{}, log:[], hist:{} };
+      once:{}, daily:{date:ymd(), done:{}}, seen:{}, custom:{}, log:[], hist:{}, alias:{} };
     ORDER.forEach(function(k){ s.seen[k]={}; s.custom[k]=[]; });
     return s;
   }
@@ -36,6 +36,8 @@
   function migrate(){
     if(!Array.isArray(state.log)) state.log = [];
     if(!state.hist || typeof state.hist!=="object") state.hist = {};
+    if(!state.alias || typeof state.alias!=="object") state.alias = {};
+    ORDER.forEach(function(k){ if(!state.alias[k] || typeof state.alias[k]!=="object") state.alias[k] = {}; });
     var alias = {"Pigeon Africain à Olive":"Pigeon olive africain","Sizerin Flammé":"Redpolis","Grand Ara Vert":"Ara de Buffon","Ara Rouge et Vert":"Ara chloroptère"};
     var map = {};
     LISTS.oiseaux.items.forEach(function(x){ map[norm(x.n)] = x.n; });
@@ -45,7 +47,7 @@
   }
   migrate();
 
-  var tab = "insectes", q = "", onlyMissing = false, onlyLevel = false, jf = "all", jmax = 40, ioMsg = "";
+  var tab = "insectes", q = "", onlyMissing = false, onlyLevel = false, jf = "all", jmax = 40, ioMsg = "", editing = null;
   var dbDoc = null, timer = null;
   var app = document.getElementById("app");
   var saveEl = document.getElementById("save-state");
@@ -97,6 +99,8 @@
     var p = d.split("-");
     return new Date(+p[0], +p[1]-1, +p[2]).toLocaleDateString("fr-FR", {weekday:"long", day:"numeric", month:"long"});
   }
+  /* Name shown for an entry: the player's own name if set, else the guide's. */
+  function disp(l, n){ var a = state.alias && state.alias[l]; return (a && a[n]) ? a[n] : n; }
   function logAdd(l, n){
     state.log.push({d:ymd(), l:l, n:n});
     if(state.log.length>1000) state.log = state.log.slice(-1000);
@@ -134,7 +138,7 @@
   }
   /* csv:end */
   function buildCsv(){
-    var rows = [["type","cle","valeur","date"]];
+    var rows = [["type","cle","valeur","date","alias"]];
     rows.push(["reglage","dg",state.dg,""]);
     Object.keys(state.levels).forEach(function(k){ rows.push(["reglage",k,state.levels[k],""]); });
     Object.keys(state.once).forEach(function(k){ if(state.once[k]) rows.push(["inventaire",k,1,""]); });
@@ -148,6 +152,9 @@
     Object.keys(state.hist).forEach(function(d){ hist[d] = state.hist[d]; });
     var tn = DAILY.filter(function(d){ return state.daily.done[d.k]; }).length;
     if(tn) hist[ymd()] = tn;
+    ORDER.forEach(function(k){
+      Object.keys(state.alias[k]||{}).forEach(function(n){ rows.push(["alias",k,n,"",state.alias[k][n]]); });
+    });
     Object.keys(hist).sort().forEach(function(d){ rows.push(["routine",d,hist[d],""]); });
     return rows.map(function(r){ return r.map(csvField).join(";"); }).join("\r\n")+"\r\n";
   }
@@ -215,6 +222,9 @@
           if(!state.seen[key][val]){ state.seen[key][val] = true; added++; }
           if(dateRe.test(date) && !state.log.some(function(x){ return x.l===key && x.n===val; })) state.log.push({d:date, l:key, n:val});
         }
+      } else if(type==="alias"){
+        var al = clean(r[4]);
+        if(ORDER.indexOf(key)>=0 && val && al){ if(al!==val) state.alias[key][val] = al; settings++; } else skipped++;
       } else skipped++;
     });
     state.log.sort(function(a,b){ return a.d<b.d ? -1 : (a.d>b.d ? 1 : 0); });
@@ -326,7 +336,7 @@
         gh += '<div class="jday"><div class="label">'+esc(dayLabel(x.d))+'</div><ul class="list">';
         cur = x.d;
       }
-      gh += '<li><span style="flex:1;min-width:0">'+esc(x.n)+'</span><span class="tag">'+esc(LISTS[x.l] ? LISTS[x.l].label : x.l)+'</span></li>';
+      gh += '<li><span style="flex:1;min-width:0">'+esc(disp(x.l, x.n))+'</span><span class="tag">'+esc(LISTS[x.l] ? LISTS[x.l].label : x.l)+'</span></li>';
     });
     if(cur!==null) gh += '</ul></div>';
     if(!shown.length) gh = '<div class="empty">Rien de coché pour l\'instant. Chaque case cochée dans Collections apparaîtra ici avec sa date.</div>';
@@ -363,8 +373,19 @@
       h += '<details class="grp" open><summary><span class="t">'+esc(gr.g)+'</span><span class="gcount"></span></summary><ul class="list">';
       gr.it.forEach(function(x, i){
         var id = 's-'+tab+'-'+norm(gr.g).replace(/[^a-z0-9]+/g,'')+'-'+i;
-        h += '<li data-l="'+(x.l||0)+'" data-s="'+esc(norm(x.n+' '+gr.g+' '+x.m))+'"><label for="'+id+'"><input type="checkbox" id="'+id+'" data-seen="'+esc(x.n)+'"'+(state.seen[tab][x.n]?' checked':'')+'><span>'+esc(x.n)+(x.m?'<span class="hint">'+esc(x.m)+'</span>':'')+'</span></label>'+
-             (x.c?'<button type="button" class="x" data-del="'+esc(x.n)+'" aria-label="Retirer '+esc(x.n)+'">×</button>':'')+'</li>';
+        var dn = disp(tab, x.n), ed = editing && editing.l===tab && editing.n===x.n;
+        var meta = (dn!==x.n ? "Nom d'origine : "+x.n+(x.m?" · ":"") : "")+x.m;
+        var box = '<input type="checkbox" id="'+id+'" data-seen="'+esc(x.n)+'"'+(state.seen[tab][x.n]?' checked':'')+'>';
+        h += '<li data-l="'+(x.l||0)+'" data-s="'+esc(norm(dn+' '+x.n+' '+gr.g+' '+x.m))+'">';
+        if(ed){
+          h += box+'<form class="renf" data-ren="'+esc(x.n)+'"><input type="text" id="ren-in" class="rin" value="'+esc(dn)+'" maxlength="80" aria-label="Nom dans ton jeu" autocomplete="off">'+
+               '<button class="btn" type="submit">OK</button><button class="btn ghost" type="button" data-rencancel>Annuler</button></form>';
+        } else {
+          h += '<label for="'+id+'">'+box+'<span>'+esc(dn)+(meta?'<span class="hint">'+esc(meta)+'</span>':'')+'</span></label>'+
+               '<button type="button" class="x" data-edit="'+esc(x.n)+'" aria-label="Renommer '+esc(dn)+'" title="Renommer">✎</button>'+
+               (x.c?'<button type="button" class="x" data-del="'+esc(x.n)+'" aria-label="Retirer '+esc(dn)+'">×</button>':'');
+        }
+        h += '</li>';
       });
       h += '</ul></details>';
     });
@@ -421,12 +442,20 @@
     if(e.target.closest("[data-export]")){ doExport(); return; }
     if(e.target.closest("[data-copy]")){ doCopy(); return; }
     if(e.target.closest("[data-paste]")){ var ta = document.getElementById("io-paste"); if(ta) doImport(ta.value); return; }
+    var eb = e.target.closest("[data-edit]");
+    if(eb){
+      editing = {l:tab, n:eb.getAttribute("data-edit")};
+      renderColl();
+      var ri = document.getElementById("ren-in"); if(ri){ ri.focus(); ri.select(); }
+      return;
+    }
+    if(e.target.closest("[data-rencancel]")){ editing = null; renderColl(); return; }
     var jb = e.target.closest("[data-jf]");
     if(jb){ jf = jb.getAttribute("data-jf"); jmax = 40; renderJournal(); return; }
     var jm = e.target.closest("[data-jmore]");
     if(jm){ jmax += 40; renderJournal(); return; }
     var t = e.target.closest("[data-tab]");
-    if(t){ tab = t.getAttribute("data-tab"); q = ""; renderColl(); return; }
+    if(t){ tab = t.getAttribute("data-tab"); q = ""; editing = null; renderColl(); return; }
     var x = e.target.closest("[data-del]");
     if(x){
       var n = x.getAttribute("data-del");
@@ -469,18 +498,31 @@
     if(e.target.id==="q"){ q = e.target.value; applyFilter(); }
   });
   app.addEventListener("submit", function(e){
+    var rf = e.target.getAttribute("data-ren");
+    if(rf!==null){
+      e.preventDefault();
+      var nv = (document.getElementById("ren-in").value||"").trim();
+      if(nv && nv!==rf) state.alias[tab][rf] = nv; else delete state.alias[tab][rf];
+      editing = null; renderColl(); renderJournal(); queueSave();
+      return;
+    }
     if(e.target.id!=="add-form") return;
     e.preventDefault();
     var inp = document.getElementById("add-name");
     var n = (inp.value||"").trim();
     if(!n) return;
-    var exists = allItems(tab).some(function(x){ return norm(x.n)===norm(n); });
+    function same(x){ return norm(x.n)===norm(n) || norm(disp(tab, x.n))===norm(n); }
+    var hit = allItems(tab).filter(same)[0], exists = !!hit;
     if(!exists){ state.custom[tab].push(n); }
-    var nm = exists ? allItems(tab).filter(function(x){return norm(x.n)===norm(n);})[0].n : n;
+    var nm = exists ? hit.n : n;
     if(!state.seen[tab][nm]){ state.seen[tab][nm] = true; logAdd(tab, nm); }
     q = "";
     renderColl(); renderJournal(); queueSave();
     var again = document.getElementById("add-name"); if(again) again.focus();
+  });
+
+  app.addEventListener("keydown", function(e){
+    if(e.key==="Escape" && editing){ editing = null; renderColl(); }
   });
 
   render();

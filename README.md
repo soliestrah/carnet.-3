@@ -31,8 +31,13 @@ Format, une ligne par information, colonnes `type;cle;valeur;date` :
 | `collection` | `insectes`, `poissons`, `oiseaux`, `cuisine`, `cultures` | nom coché | jour où tu l'as coché (`AAAA-MM-JJ`, facultatif) |
 | `ajout` | liste concernée | nom ajouté à la main | |
 | `routine` | jour (`AAAA-MM-JJ`) | nombre de cases de routine cochées | |
+| `alias` | liste concernée | nom d'origine du guide | (5e colonne `alias`) ton nom à toi |
 
 Les noms qui commencent par `=`, `+`, `-` ou `@` sont préfixés d'une apostrophe à l'export pour éviter qu'un tableur les prenne pour une formule. L'import retire cette apostrophe.
+
+## Renommer une entrée
+
+Les guides traduisent les noms chacun à leur façon et ils ne correspondent pas toujours à ceux de ton jeu. Le bouton ✎ à droite de chaque ligne permet de saisir le nom tel qu'il apparaît dans ton jeu (Entrée pour valider, Échap pour annuler, champ vide pour revenir au nom d'origine). Le nom d'origine reste affiché en petit et la recherche trouve les deux. Les noms choisis sont inclus dans l'export CSV (lignes `alias`).
 
 ## Modifier et améliorer
 
