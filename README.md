@@ -54,12 +54,14 @@ Les guides traduisent les noms chacun à leur façon et ils ne correspondent pas
 
 ## Sources des listes
 
-Les listes viennent de guides de la communauté et peuvent être incomplètes ou changer avec les mises à jour du jeu. Le carnet en jeu fait foi.
+Les noms sont ceux du jeu **en anglais**. Les listes viennent de guides de la communauté et peuvent être incomplètes ou changer avec les mises à jour. Le carnet en jeu fait foi.
 
-- Insectes : [PlayNews](https://www.playnews.gg/guides/attrapage-d-insectes-heartopia-guide-detaille-et-liste-complete) (noms français), [Heartopia.Life](https://heartopia.life/database/insects/) (noms anglais)
-- Poissons : [KeenGamer](https://www.keengamer.com/fr/articles/international/guides-fr-2/heartopia-guide-peche-comment-pecher-et-emplacements-des-poissons/)
-- Oiseaux : [KeenGamer](https://www.keengamer.com/fr/articles/international/guides-fr-2/heartopia-guide-complet-de-la-passion-observation-des-oiseaux-tous-les-emplacements-des-oiseaux/), [Booster Breakerz](https://booster-breakerz.fr/observation-des-oiseaux-heartopia-ou-trouver-les-77-especes)
-- Recettes : [mobi.gg](https://mobi.gg/fr/astuces/recettes-heartopia/)
+- Insectes (101) : [Heartopia.Life](https://heartopia.life/) pour la liste, [Selphie1999 Gaming](https://selphie1999gaming.com/) pour les lieux, heures et météo
+- Poissons (124) : [Heartopia.Life](https://heartopia.life/)
+- Oiseaux (66, il en existe davantage) : [KeenGamer](https://www.keengamer.com/) et autres guides
+- Recettes (58) : [KeenGamer](https://www.keengamer.com/) et [Pocket Tactics](https://www.pockettactics.com/)
 - Inventaire et paliers : guides [Selphie1999 Gaming](https://selphie1999gaming.com/game-guides/heartopia/heartopia-how-to-expand-your-storage/) et [Space4Games](https://space4games.com/en/games-en/heartopia-inventory-expand-your-backpack/)
+
+Quelques noms de recettes varient d'un guide à l'autre (Latte / Coffee Latte, Cheesecake / Cheese Cake) : renomme avec ✎ si besoin.
 
 Projet de fan, sans lien avec XD Entertainment. Aucune licence n'est définie : ajoute-en une si tu publies le dépôt.
