@@ -152,3 +152,18 @@ section{scroll-margin-top:72px}
 .shop{border:1px solid var(--line);border-radius:8px;padding:10px 14px;background:var(--surface)}
 .shop summary{cursor:pointer;font-weight:600}
 .chips{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+
+/* Où aller maintenant ? */
+details.zone{border-top:1px solid var(--line)}
+details.zone>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:12px;padding:12px 0;font-weight:600;align-items:baseline}
+details.zone>summary::-webkit-details-marker{display:none}
+details.zone>summary::before{content:"▸";color:var(--muted);margin-right:8px;display:inline-block;transition:transform .15s}
+details.zone[open]>summary::before{transform:rotate(90deg)}
+details.zone>summary .t{flex:1;min-width:0}
+details.zone .list>li:first-child{border-top:0}
+details.zone .list>li:last-child{border-bottom:0}
+
+/* Cibles */
+.x.star{font-size:22px}
+.x.star[aria-pressed="true"]{color:var(--sun)}
+#targets{display:flex;flex-direction:column;gap:6px}

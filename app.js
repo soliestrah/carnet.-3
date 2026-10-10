@@ -8,7 +8,7 @@
   function fresh(){
     var s = { dg:11,
       levels:{insectes:4, peche:3, jardinage:3, cuisine:2, oiseaux:2},
-      once:{}, daily:{date:ymd(), done:{}}, seen:{}, custom:{}, log:[], hist:{}, alias:{} };
+      once:{}, daily:{date:ymd(), done:{}}, seen:{}, custom:{}, log:[], hist:{}, alias:{}, cible:{} };
     ORDER.forEach(function(k){ s.seen[k]={}; s.custom[k]=[]; });
     return s;
   }
@@ -31,12 +31,13 @@
   ORDER.forEach(function(k){ if(!state.seen[k]) state.seen[k]={}; if(!Array.isArray(state.custom[k])) state.custom[k]=[]; });
   rollDaily();
 
-  var LVKEY = {insectes:"insectes", oiseaux:"oiseaux", cuisine:"cuisine"};
+  var LVKEY = {insectes:"insectes", oiseaux:"oiseaux", cuisine:"cuisine", cultures:"jardinage"};
   /* Keep ticks made under older bird names. */
   function migrate(){
     if(!Array.isArray(state.log)) state.log = [];
     if(!state.hist || typeof state.hist!=="object") state.hist = {};
     if(!state.alias || typeof state.alias!=="object") state.alias = {};
+    if(!state.cible || typeof state.cible!=="object" || Array.isArray(state.cible)) state.cible = {};
     ORDER.forEach(function(k){ if(!state.alias[k] || typeof state.alias[k]!=="object") state.alias[k] = {}; });
     var alias = {"Pigeon Africain à Olive":"Pigeon olive africain","Sizerin Flammé":"Redpolis","Grand Ara Vert":"Ara de Buffon","Ara Rouge et Vert":"Ara chloroptère"};
     var map = {};
@@ -48,6 +49,7 @@
   migrate();
 
   var tab = "insectes", q = "", onlyMissing = false, onlyLevel = false, fh = [], fw = [], fl = "", so = "", jf = "all", jmax = 40, ioMsg = "", editing = null;
+  var wt = "", ww = "", onlyTarget = false, tnow = false;
   var dbDoc = null, timer = null;
   var app = document.getElementById("app");
   var saveEl = document.getElementById("save-state");
@@ -155,6 +157,10 @@
     ORDER.forEach(function(k){
       Object.keys(state.alias[k]||{}).forEach(function(n){ rows.push(["alias",k,n,"",state.alias[k][n]]); });
     });
+    Object.keys(state.cible).forEach(function(ck){
+      var i = ck.indexOf("|"); if(i<1) return;
+      rows.push(["cible", ck.slice(0,i), ck.slice(i+1), "", state.cible[ck]||""]);
+    });
     Object.keys(hist).sort().forEach(function(d){ rows.push(["routine",d,hist[d],""]); });
     return rows.map(function(r){ return r.map(csvField).join(";"); }).join("\r\n")+"\r\n";
   }
@@ -222,6 +228,9 @@
           if(!state.seen[key][val]){ state.seen[key][val] = true; added++; }
           if(dateRe.test(date) && !state.log.some(function(x){ return x.l===key && x.n===val; })) state.log.push({d:date, l:key, n:val});
         }
+      } else if(type==="cible"){
+        var cn = clean(r[4]), ck = key+"|"+val;
+        if(ORDER.indexOf(key)>=0 && val){ if(!Object.prototype.hasOwnProperty.call(state.cible, ck) || cn) state.cible[ck] = cn; settings++; } else skipped++;
       } else if(type==="alias"){
         var al = clean(r[4]);
         if(ORDER.indexOf(key)>=0 && val && al){ if(al!==val) state.alias[key][val] = al; settings++; } else skipped++;
@@ -280,6 +289,10 @@
 
     h += '<section id="sec-inventaire"><div><h2>Inventaire</h2><p class="sub">À faire une fois, puis à garder en tête.</p></div><ul class="list">'+
       ONCE.map(function(o){return check("once",o.k,o.t,o.h,!!state.once[o.k]);}).join("")+'</ul></section>';
+
+    h += '<section class="full" id="sec-cibles"><div><h2>À chasser</h2><p class="sub">Tes cibles du moment : étoile une entrée (☆) dans Collections ou Où aller, puis ajoute une note.</p></div><div id="targets"></div></section>';
+
+    h += '<section class="full" id="sec-ou"><div><h2>Où aller maintenant ?</h2><p class="sub">Choisis l\'heure et la météo en jeu : les zones sont classées par nombre d\'insectes et d\'oiseaux que tu n\'as pas encore et qui peuvent s\'y trouver.</p></div><div id="where"></div></section>';
 
     h += '<section class="full" id="sec-collections"><div><h2>Collections</h2><p class="sub">Coche ce que tu as déjà. Ce qui manque à la liste, ajoute-le toi-même.</p></div><div id="coll"></div></section>';
 
@@ -397,9 +410,17 @@
       p.ing.forEach(function(s){ c.push('<span class="ch ing">'+esc(s)+'</span>'); });
       return (c.length ? '<span class="info">'+c.join("")+'</span>' : '')+(p.src ? '<span class="hint">🔓 '+esc(p.src)+'</span>' : '');
     }
-    var lieu = [p.lieu].concat(p.extra).filter(Boolean).join(" · ");
+    if(k==="cultures"){
+      var q = (x.m||"").split(" · ");
+      q.forEach(function(s){ if(/^Niv\. \d+$/.test(s)) c.push('<span class="ch lv">Jardinage '+s.replace("Niv. ","niv. ")+'</span>'); else if(s) c.push('<span class="ch">'+esc(s)+'</span>'); });
+      return '<span class="info">'+c.join("")+'</span>';
+    }
+    var clock = p.extra.filter(function(s){ return /^\d\d:\d\d–\d\d:\d\d$/.test(s); });
+    var ex = p.extra.filter(function(s){ return clock.indexOf(s)<0; });
+    var lieu = [p.lieu].concat(ex).filter(Boolean).join(" · ");
     c.push('<span class="ch pl">📍 '+(lieu ? esc(lieu) : "Lieu inconnu")+'</span>');
     if(p.h.length) c.push('<span class="ch">🕐 '+names(p.h, HF)+'</span>');
+    if(clock.length) c.push('<span class="ch" title="Heures du serveur">🕐 '+esc(clock.join(" · "))+'</span>');
     if(p.w.length) c.push('<span class="ch">🌦 '+names(p.w, WF)+'</span>');
     return '<span class="info">'+c.join("")+'</span>';
   }
@@ -420,6 +441,126 @@
     var o = s.querySelector("details"), w = o && o.open;
     s.innerHTML = shopping(allItems("cuisine"));
     o = s.querySelector("details"); if(o && w) o.open = true;
+  }
+
+
+
+  /* ---------- À chasser : étoiles et notes ---------- */
+  function isTarget(l, n){ return Object.prototype.hasOwnProperty.call(state.cible, l+"|"+n); }
+  function starBtn(l, n){
+    var on = isTarget(l, n);
+    return '<button type="button" class="x star" data-star="'+esc(l+"|"+n)+'" aria-pressed="'+on+'" aria-label="'+(on?'Retirer des cibles : ':'Ajouter aux cibles : ')+esc(disp(l,n))+'" title="Cible">'+(on?"★":"☆")+'</button>';
+  }
+  function setTargetUI(key){
+    var i = key.indexOf("|"), l = key.slice(0,i), n = key.slice(i+1), on = isTarget(l, n);
+    Array.prototype.forEach.call(app.querySelectorAll("[data-star]"), function(b){
+      if(b.getAttribute("data-star")!==key) return;
+      b.outerHTML = starBtn(l, n);
+    });
+    Array.prototype.forEach.call(app.querySelectorAll("#groups li"), function(li){
+      var b = li.querySelector("[data-star]");
+      if(b && b.getAttribute("data-star")===key) li.setAttribute("data-t", on?"1":"0");
+    });
+  }
+  /* « ok » = possible avec l'heure et la météo choisies, « maybe » = le guide ne le précise pas. */
+  function tcond(k, x){
+    if(k!=="insectes" && k!=="oiseaux") return "ok";
+    var p = parse(k, x), u = false;
+    if(wt){ if(!p.h.length) u = true; else if(p.h.indexOf(wt)<0) return "no"; }
+    if(ww){ if(!p.w.length) u = true; else if(p.w.indexOf(ww)<0) return "no"; }
+    return u ? "maybe" : "ok";
+  }
+  function renderTargets(){
+    var el = document.getElementById("targets"); if(!el) return;
+    var groups = [], done = 0, hidden = 0, total = 0;
+    ORDER.forEach(function(k){
+      var rows = [];
+      allItems(k).forEach(function(x){
+        if(!isTarget(k, x.n)) return;
+        total++;
+        if(state.seen[k][x.n]){ done++; return; }
+        var c = tcond(k, x);
+        if(tnow && c==="no"){ hidden++; return; }
+        rows.push({k:k, x:x, c:c});
+      });
+      if(rows.length) groups.push({k:k, rows:rows});
+    });
+    var h = '<label class="chk" for="tnow"><input type="checkbox" id="tnow"'+(tnow?' checked':'')+'>Seulement ceux possibles avec l\'heure et la météo choisies dans « Où aller »</label>';
+    if(!groups.length){
+      h += '<div class="empty">'+(total ? (hidden ? 'Aucune cible possible avec ces conditions : '+hidden+' masquée'+(hidden>1?'s':'')+'.' : 'Toutes tes cibles sont attrapées.') : 'Aucune cible pour l\'instant. Clique sur ☆ à droite d\'une entrée pour l\'ajouter ici.')+'</div>';
+    }
+    groups.forEach(function(g){
+      h += '<div class="jday"><div class="label">'+esc(LISTS[g.k].label)+'</div><ul class="list">';
+      g.rows.forEach(function(r){
+        var key = r.k+"|"+r.x.n;
+        h += '<li><div style="flex:1;min-width:0"><span class="pname">'+esc(disp(r.k, r.x.n))+'</span>'+(r.c==="maybe" ? ' <span class="tag soon">à vérifier</span>' : '')+detail(r.k, r.x)+
+             '<input type="text" class="rin" style="width:100%;margin-top:6px" data-note="'+esc(key)+'" value="'+esc(state.cible[key]||"")+'" maxlength="200" placeholder="Note (ex. vu près du phare, raté 3 fois)" aria-label="Note pour '+esc(disp(r.k, r.x.n))+'"></div>'+
+             '<button type="button" class="btn ghost" data-got="'+esc(key)+'">Attrapé</button>'+starBtn(r.k, r.x.n)+'</li>';
+      });
+      h += '</ul></div>';
+    });
+    if(done || hidden) h += '<p class="note">'+(done ? done+' cible'+(done>1?'s':'')+' déjà attrapée'+(done>1?'s':'')+'.' : '')+(hidden ? ' '+hidden+' masquée'+(hidden>1?'s':'')+' par l\'heure ou la météo.' : '')+'</p>';
+    el.innerHTML = h;
+  }
+
+  /* ---------- Où aller maintenant ? ---------- */
+  var ZONES = [
+    [/event/i, "Événements"], [/not yet known|not confirmed/i, "Lieu pas encore connu"],
+    [/onsen/i, "Montagne des onsen"], [/flower|whale mountain|amethyst/i, "Champ de fleurs et plage d'Améthyste"],
+    [/fishing|wharf|lighthouse|pier/i, "Village de pêcheurs"], [/sea|ocean|beach/i, "Mer et plages"],
+    [/lake|river|waterside/i, "Bord de l'eau"], [/forest|deer|jump puzzle/i, "Forêt"],
+    [/suburb|home|house|central|blanc/i, "Banlieue, centre et maisons"]
+  ];
+  function zoneOf(k, x, p){
+    if(k==="insectes") return gfr(x.g);
+    var l = (p.lieu||"").split(", ")[0];
+    if(!l) return "Lieu pas encore connu";
+    for(var i=0;i<ZONES.length;i++) if(ZONES[i][0].test(l)) return ZONES[i][1];
+    return "Autre lieu";
+  }
+  var ZSKIP = /vénement|pas encore|ollaboration|attractifs|givre/;
+  function whereData(){
+    var zs = {}, order = [];
+    ["insectes","oiseaux"].forEach(function(k){
+      var lv = state.levels[k] || 99;
+      allItems(k).forEach(function(x){
+        if(x.c || state.seen[k][x.n] || (x.l && x.l > lv)) return;
+        var p = parse(k, x), z = zoneOf(k, x, p);
+        if(ZSKIP.test(z)) return;
+        var unsure = false;
+        if(wt){ if(!p.h.length) unsure = true; else if(p.h.indexOf(wt)<0) return; }
+        if(ww){ if(!p.w.length) unsure = true; else if(p.w.indexOf(ww)<0) return; }
+        if(!zs[z]){ zs[z] = {z:z, ok:[], maybe:[]}; order.push(zs[z]); }
+        (unsure ? zs[z].maybe : zs[z].ok).push({k:k, x:x, p:p});
+      });
+    });
+    return order.sort(function(a,b){ return (b.ok.length-a.ok.length) || (b.maybe.length-a.maybe.length) || a.z.localeCompare(b.z); });
+  }
+  function renderWhere(){
+    var el = document.getElementById("where"); if(!el) return;
+    var open = null, prev = el.querySelectorAll("details.zone");
+    if(prev.length){ open = {}; Array.prototype.forEach.call(prev, function(d){ if(d.open) open[d.getAttribute("data-z")] = 1; }); }
+    var data = whereData();
+    var h = '<div class="tools"><span class="label">Heure</span>'+Object.keys(HF).map(function(k){ return '<button type="button" class="tab" data-wt="'+k+'" aria-pressed="'+(wt===k)+'">'+HF[k][1]+'</button>'; }).join("")+'</div>'+
+            '<div class="tools"><span class="label">Météo</span>'+Object.keys(WF).map(function(k){ return '<button type="button" class="tab" data-ww="'+k+'" aria-pressed="'+(ww===k)+'">'+WF[k][1]+'</button>'; }).join("")+'</div>';
+    h += '<p class="note">Seuls les insectes et oiseaux de ton niveau de passion et pas encore cochés sont comptés. Les poissons n\'ont pas d\'heure ni de météo dans les données. Une entrée dont l\'heure ou la météo n\'est pas précisée par le guide passe dans « à vérifier ».</p>';
+    if(!data.length) h += '<div class="empty">Rien à chasser avec ces conditions : tout est coché, ou aucune espèce connue ne correspond.</div>';
+    data.forEach(function(d, i){
+      var isOpen = open ? !!open[d.z] : i===0;
+      [d.ok, d.maybe].forEach(function(a){ a.sort(function(p, q){ return (isTarget(q.k,q.x.n)?1:0) - (isTarget(p.k,p.x.n)?1:0); }); });
+      var cnt = function(a, k){ return a.filter(function(r){ return r.k===k; }).length; };
+      var all = d.ok.concat(d.maybe), ni = cnt(all,"insectes"), no = cnt(all,"oiseaux");
+      var sub = [ni ? ni+" insecte"+(ni>1?"s":"") : "", no ? no+" oiseau"+(no>1?"x":"") : ""].filter(Boolean).join(" · ");
+      h += '<details class="zone" data-z="'+esc(d.z)+'"'+(isOpen?' open':'')+'><summary><span class="t">'+esc(d.z)+'</span><span class="gcount">'+sub+(d.maybe.length ? ' (dont '+d.maybe.length+' à vérifier)' : '')+'</span></summary><ul class="list">';
+      all.forEach(function(r, j){
+        var maybe = j>=d.ok.length;
+        var det = [r.p.lieu].concat(r.p.h.length ? [names(r.p.h, HF)] : [], r.p.w.length ? [names(r.p.w, WF)] : []).filter(Boolean).join(" · ");
+        h += '<li><span style="flex:1;min-width:0">'+esc(disp(r.k, r.x.n))+(det ? '<span class="hint">'+esc(det)+'</span>' : '')+'</span>'+
+             starBtn(r.k, r.x.n)+(maybe ? '<span class="tag soon">à vérifier</span>' : '')+'<span class="tag">'+esc(LISTS[r.k].label)+'</span></li>';
+      });
+      h += '</ul></details>';
+    });
+    el.innerHTML = h;
   }
 
   function renderColl(){
@@ -457,7 +598,7 @@
     h += '<p class="note">'+esc(L.note)+(SPECIES.indexOf(tab)>=0?' Une heure ou une météo absente veut dire que le guide ne la précise pas : les filtres heure et météo gardent ces entrées.':'')+(L.src?' Sources : '+L.src.map(function(s){ return '<a href="'+s.u+'" target="_blank" rel="noopener">'+esc(s.t)+'</a>'; }).join(', ')+'.':'')+'</p>';
     if(items.length){
       h += '<div class="tools"><input type="search" id="q" placeholder="Chercher dans '+esc(L.label.toLowerCase())+'" value="'+esc(q)+'" aria-label="Chercher">'+
-           '<label class="chk" for="miss"><input type="checkbox" id="miss"'+(onlyMissing?' checked':'')+'>Seulement ce qui me manque</label>'+
+           '<label class="chk" for="miss"><input type="checkbox" id="miss"'+(onlyMissing?' checked':'')+'>Seulement ce qui me manque</label>'+'<label class="chk" for="tgt"><input type="checkbox" id="tgt"'+(onlyTarget?' checked':'')+'>Seulement mes cibles ★</label>'+
            (hasL?'<label class="chk" for="lvl"><input type="checkbox" id="lvl"'+(onlyLevel?' checked':'')+'>À mon niveau de passion ('+state.levels[LVKEY[tab]]+')</label>':'')+sel("so",so,"Ordre du guide",sortOpts)+(isSp ? sel("fl",fl,"Tous les lieux",zoneOpts) : '')+'</div><div class="tools">'+(isSp ? '<span class="label">Heure</span>'+tg("fh",HF,fh)+'<span class="label">Météo</span>'+tg("fw",WF,fw) : '')+'<button type="button" class="btn ghost" data-reset>Réinitialiser les filtres</button></div>'+(tab==="cuisine" ? '<div id="shop">'+shopping(items)+'</div>' : '');
     }
     h += '<div id="groups">';
@@ -471,13 +612,13 @@
         var dn = disp(tab, x.n), ed = editing && editing.l===tab && editing.n===x.n;
         var meta = dn!==x.n ? "Nom d'origine : "+x.n : "", det = detail(tab, x), pp = x.p;
         var box = '<input type="checkbox" id="'+id+'" data-seen="'+esc(x.n)+'"'+(state.seen[tab][x.n]?' checked':'')+'>';
-        h += '<li data-l="'+(x.l||0)+'" data-s="'+esc(norm(dn+' '+x.n+' '+gr.g+' '+x.m))+'" data-h="'+keys(pp.h,HF)+'" data-w="'+keys(pp.w,WF)+'" data-p="'+esc(pp.lieu||"")+'">';
+        h += '<li data-l="'+(x.l||0)+'" data-s="'+esc(norm(dn+' '+x.n+' '+gr.g+' '+x.m))+'" data-h="'+keys(pp.h,HF)+'" data-w="'+keys(pp.w,WF)+'" data-p="'+esc(pp.lieu||"")+'" data-t="'+(isTarget(tab,x.n)?1:0)+'">';
         if(ed){
           h += box+'<form class="renf" data-ren="'+esc(x.n)+'"><input type="text" id="ren-in" class="rin" value="'+esc(dn)+'" maxlength="80" aria-label="Nom dans ton jeu" autocomplete="off">'+
                '<button class="btn" type="submit">OK</button><button class="btn ghost" type="button" data-rencancel>Annuler</button></form>';
         } else {
           h += '<label for="'+id+'">'+box+'<span>'+esc(dn)+(meta?'<span class="hint">'+esc(meta)+'</span>':'')+det+'</span></label>'+
-               '<button type="button" class="x" data-edit="'+esc(x.n)+'" aria-label="Renommer '+esc(dn)+'" title="Renommer">✎</button>'+
+               starBtn(tab, x.n)+'<button type="button" class="x" data-edit="'+esc(x.n)+'" aria-label="Renommer '+esc(dn)+'" title="Renommer">✎</button>'+
                (x.c?'<button type="button" class="x" data-del="'+esc(x.n)+'" aria-label="Retirer '+esc(dn)+'">×</button>':'');
         }
         h += '</li>';
@@ -500,7 +641,7 @@
         var cb = li.querySelector("input[type=checkbox]");
         var hh = li.getAttribute("data-h")||"", ww = li.getAttribute("data-w")||"";
         var lp = li.getAttribute("data-p")||"";
-        var m = (!fh.length||!hh||fh.some(function(k){ return hh.indexOf(k)>-1; })) && (!fw.length||!ww||fw.some(function(k){ return ww.indexOf(k)>-1; })) && (!fl||lp.indexOf(fl)>-1) && (!qq || li.getAttribute("data-s").indexOf(qq)>-1) && !(onlyMissing && cb && cb.checked) &&
+        var m = (!fh.length||!hh||fh.some(function(k){ return hh.indexOf(k)>-1; })) && (!fw.length||!ww||fw.some(function(k){ return ww.indexOf(k)>-1; })) && (!fl||lp.indexOf(fl)>-1) && (!qq || li.getAttribute("data-s").indexOf(qq)>-1) && !(onlyMissing && cb && cb.checked) && !(onlyTarget && li.getAttribute("data-t")!=="1") &&
                 !(onlyLevel && LVKEY[tab] && parseInt(li.getAttribute("data-l"),10) > (state.levels[LVKEY[tab]]||1));
         li.hidden = !m; if(m) any = true;
       });
@@ -509,6 +650,8 @@
   }
 
   function refreshCounts(){
+    renderWhere();
+    renderTargets();
     var sd = 0, st = 0;
     SPECIES.forEach(function(k){ var s = stats(k); sd += s.d; st += s.t; });
     var a = document.getElementById("sum-d"), b = document.getElementById("sum-t");
@@ -551,13 +694,31 @@
     if(jb){ jf = jb.getAttribute("data-jf"); jmax = 40; renderJournal(); return; }
     var jm = e.target.closest("[data-jmore]");
     if(jm){ jmax += 40; renderJournal(); return; }
+    var sb = e.target.closest("[data-star]");
+    if(sb){
+      var sk = sb.getAttribute("data-star");
+      if(Object.prototype.hasOwnProperty.call(state.cible, sk)) delete state.cible[sk]; else state.cible[sk] = "";
+      setTargetUI(sk); applyFilter(); renderTargets(); queueSave(); return;
+    }
+    var gb = e.target.closest("[data-got]");
+    if(gb){
+      var gk = gb.getAttribute("data-got"), gi = gk.indexOf("|"), gl = gk.slice(0,gi), gn = gk.slice(gi+1);
+      if(state.seen[gl] && !state.seen[gl][gn]){ state.seen[gl][gn] = true; logAdd(gl, gn); }
+      renderColl(); renderJournal(); queueSave(); return;
+    }
+    var wb = e.target.closest("[data-wt],[data-ww]");
+    if(wb){
+      if(wb.hasAttribute("data-wt")){ var vt = wb.getAttribute("data-wt"); wt = wt===vt ? "" : vt; }
+      else { var vw = wb.getAttribute("data-ww"); ww = ww===vw ? "" : vw; }
+      renderWhere(); return;
+    }
     var tgb = e.target.closest("[data-tg]");
     if(tgb){
       var pr = tgb.getAttribute("data-tg").split(":"), arr = pr[0]==="fh" ? fh : fw, ix = arr.indexOf(pr[1]);
       if(ix<0) arr.push(pr[1]); else arr.splice(ix,1);
       tgb.setAttribute("aria-pressed", String(ix<0)); applyFilter(); return;
     }
-    if(e.target.closest("[data-reset]")){ fh = []; fw = []; fl = ""; q = ""; onlyMissing = false; onlyLevel = false; renderColl(); return; }
+    if(e.target.closest("[data-reset]")){ fh = []; fw = []; fl = ""; q = ""; onlyMissing = false; onlyLevel = false; onlyTarget = false; renderColl(); return; }
     var t = e.target.closest("[data-tab]");
     if(t){ tab = t.getAttribute("data-tab"); q = ""; editing = null; renderColl(); return; }
     var x = e.target.closest("[data-del]");
@@ -573,6 +734,9 @@
     var t = e.target;
     if(t.id==="fl"){ fl = t.value; applyFilter(); return; }
     if(t.id==="so"){ so = t.value; renderColl(); return; }
+    if(t.id==="tgt"){ onlyTarget = t.checked; applyFilter(); return; }
+    if(t.id==="tnow"){ tnow = t.checked; renderTargets(); return; }
+    if(t.hasAttribute("data-note")){ queueSave(); return; }
     if(t.id==="miss"){ onlyMissing = t.checked; applyFilter(); return; }
     if(t.id==="lvl"){ onlyLevel = t.checked; applyFilter(); return; }
     if(t.id==="io-file"){
@@ -602,6 +766,7 @@
   });
   app.addEventListener("input", function(e){
     if(e.target.id==="q"){ q = e.target.value; applyFilter(); }
+    if(e.target.hasAttribute("data-note")){ state.cible[e.target.getAttribute("data-note")] = e.target.value; queueSave(); }
   });
   app.addEventListener("submit", function(e){
     var rf = e.target.getAttribute("data-ren");

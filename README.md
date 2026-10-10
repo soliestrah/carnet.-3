@@ -32,8 +32,14 @@ Format, une ligne par information, colonnes `type;cle;valeur;date` :
 | `ajout` | liste concernée | nom ajouté à la main | |
 | `routine` | jour (`AAAA-MM-JJ`) | nombre de cases de routine cochées | |
 | `alias` | liste concernée | nom d'origine du guide | (5e colonne `alias`) ton nom à toi |
+| `cible` | liste concernée | nom de l'entrée étoilée | (5e colonne) ta note |
 
 Les noms qui commencent par `=`, `+`, `-` ou `@` sont préfixés d'une apostrophe à l'export pour éviter qu'un tableur les prenne pour une formule. L'import retire cette apostrophe.
+
+## Où aller maintenant ? et À chasser
+
+- **Où aller** : choisis une heure et/ou une météo, les zones sont classées par nombre d'insectes et d'oiseaux manquants à ton niveau de passion. Les entrées dont le guide ne précise pas l'heure ou la météo sont marquées « à vérifier ».
+- **À chasser** : l'étoile ☆ (dans Collections et dans Où aller) ajoute une entrée à tes cibles, avec une note libre. Le bouton « Attrapé » la coche. Dans Collections, « Seulement mes cibles » filtre la liste. Les cibles et notes sont dans l'export CSV (lignes `cible`).
 
 ## Renommer une entrée
 
@@ -57,7 +63,8 @@ Les guides traduisent les noms chacun à leur façon et ils ne correspondent pas
 Les noms sont ceux du jeu **en anglais**. Les listes viennent de guides de la communauté et peuvent être incomplètes ou changer avec les mises à jour. Le carnet en jeu fait foi.
 
 - Insectes (101) : [Heartopia.Life](https://heartopia.life/) pour la liste, [Selphie1999 Gaming](https://selphie1999gaming.com/) pour les lieux, heures et météo
-- Poissons (124) : [Heartopia.Life](https://heartopia.life/)
+- Poissons (124) : [Heartopia.Life](https://heartopia.life/) pour la liste et les lieux, [KeenGamer](https://www.keengamer.com/) pour la météo et les horaires (heures du serveur, 83 poissons)
+- Cultures (13 plantes, 13 fleurs) : [KeenGamer](https://www.keengamer.com/)
 - Oiseaux (66, il en existe davantage) : [KeenGamer](https://www.keengamer.com/) et autres guides
 - Recettes (58) : [KeenGamer](https://www.keengamer.com/) et [Pocket Tactics](https://www.pockettactics.com/)
 - Inventaire et paliers : guides [Selphie1999 Gaming](https://selphie1999gaming.com/game-guides/heartopia/heartopia-how-to-expand-your-storage/) et [Space4Games](https://space4games.com/en/games-en/heartopia-inventory-expand-your-backpack/)
