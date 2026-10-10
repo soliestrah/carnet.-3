@@ -47,7 +47,7 @@
   }
   migrate();
 
-  var tab = "insectes", q = "", onlyMissing = false, onlyLevel = false, jf = "all", jmax = 40, ioMsg = "", editing = null;
+  var tab = "insectes", q = "", onlyMissing = false, onlyLevel = false, fh = "", fw = "", jf = "all", jmax = 40, ioMsg = "", editing = null;
   var dbDoc = null, timer = null;
   var app = document.getElementById("app");
   var saveEl = document.getElementById("save-state");
@@ -345,6 +345,80 @@
     el.innerHTML = h;
   }
 
+  /* ---------- Détails : lieu, heure, météo, ingrédients ---------- */
+  var HF = {Dawn:["aube","Aube"], Day:["jour","Journée"], Dusk:["crep","Crépuscule"], Night:["nuit","Nuit"]};
+  var WF = {Sunny:["soleil","Ensoleillé"], Rainy:["pluie","Pluie"], Rainbow:["arc","Arc-en-ciel"]};
+  var GFR = {"Forest":"Forêt","Suburbs, central area and homes":"Banlieue, centre et maisons","Fishing Village":"Village de pêcheurs","Flower Field and Amethyst Beach":"Champ de fleurs et plage d'Améthyste","Onsen Mountain":"Montagne des onsen","Waterside":"Bord de l'eau","Events and attractors":"Événements et attractifs","Location not yet known":"Lieu pas encore connu","Dreamlight Cinematics event":"Événement Dreamlight Cinematics","Modular Streets event":"Événement Modular Streets","Winter frost season":"Saison de givre (hiver)","River":"Rivière","Lake":"Lac","Sea":"Mer","Events":"Événements","Special collaboration":"Collaborations spéciales","Conditions not confirmed yet":"Conditions pas encore confirmées","More birds (location not yet known)":"Autres oiseaux (lieu pas encore connu)","Jams and sauces":"Confitures et sauces","Pies":"Tourtes","Grilled and bizarre":"Grillades et plats étranges","Drinks and cakes":"Boissons et gâteaux","Main dishes and desserts":"Plats et desserts (par niveau)"};
+  function gfr(g){ return GFR[g] || g.replace(/^Level (\d+)$/,"Niveau $1"); }
+  function unlockFr(s){
+    var v = s.replace(/^unlocked by /,""), m;
+    if(v==="default") return "Disponible dès le départ";
+    if((m=/^purchase from (.+)/.exec(v))) return "Recette achetée chez "+m[1];
+    if(/^burning/.test(v)) return "Se débloque en faisant brûler un "+(/drink/.test(v)?"breuvage":"plat");
+    if(v==="Cooking hobby") return "Débloquée avec la passion Cuisine";
+    if((m=/^(.+) quest$/.exec(v))) return "Débloquée par la quête « "+m[1]+" »";
+    return "Se débloque après : "+v;
+  }
+  function parse(k, x){
+    if(x.p) return x.p;
+    var p = {lieu:"", h:[], w:[], extra:[], niv:"", ing:[], src:""}, parts = (x.m||"").split(" · ");
+    if(k==="cuisine"){
+      parts.forEach(function(s){
+        if(/^Niv\. \d+$/.test(s)) p.niv = s;
+        else if(/^unlocked by /.test(s)) p.src = unlockFr(s);
+        else if(s) p.ing = s.split(", ");
+      });
+    } else if(SPECIES.indexOf(k)>=0){
+      parts.forEach(function(s, i){
+        var t = s.split(/, | and /);
+        if(i===0) p.lieu = s;
+        else if(t.every(function(v){ return HF[v]; })) p.h = t;
+        else if(t.every(function(v){ return WF[v]; })) p.w = t;
+        else p.extra.push(s);
+      });
+      if(/not yet known|not confirmed/i.test(p.lieu)) p.lieu = "";
+    }
+    x.p = p; return p;
+  }
+  function keys(a, M){ return a.map(function(v){ return M[v][0]; }).join(" "); }
+  function names(a, M){ return a.map(function(v){ return M[v][1]; }).join(" · "); }
+  function sel(id, val, lab, M){
+    return '<select id="'+id+'" aria-label="'+lab+'"><option value="">'+lab+'</option>'+
+      Object.keys(M).map(function(k){ return '<option value="'+M[k][0]+'"'+(val===M[k][0]?' selected':'')+'>'+M[k][1]+'</option>'; }).join("")+'</select>';
+  }
+  function detail(k, x){
+    var p = parse(k, x), c = [];
+    if(x.c || !x.m) return "";
+    if(k==="cuisine"){
+      if(p.niv) c.push('<span class="ch lv">Cuisine '+p.niv.replace("Niv. ","niv. ")+'</span>');
+      p.ing.forEach(function(s){ c.push('<span class="ch ing">'+esc(s)+'</span>'); });
+      return (c.length ? '<span class="info">'+c.join("")+'</span>' : '')+(p.src ? '<span class="hint">🔓 '+esc(p.src)+'</span>' : '');
+    }
+    var lieu = [p.lieu].concat(p.extra).filter(Boolean).join(" · ");
+    c.push('<span class="ch pl">📍 '+(lieu ? esc(lieu) : "Lieu inconnu")+'</span>');
+    if(p.h.length) c.push('<span class="ch">🕐 '+names(p.h, HF)+'</span>');
+    if(p.w.length) c.push('<span class="ch">🌦 '+names(p.w, WF)+'</span>');
+    return '<span class="info">'+c.join("")+'</span>';
+  }
+  /* Somme des ingrédients des recettes manquantes à mon niveau de cuisine. */
+  function shopping(items){
+    var t = {}, n = 0;
+    items.forEach(function(x){
+      if(x.c || state.seen.cuisine[x.n] || (x.l && x.l > state.levels.cuisine)) return;
+      var p = parse("cuisine", x); if(!p.ing.length) return; n++;
+      p.ing.forEach(function(s){ var m = /^(\d+) (.+)$/.exec(s); t[m?m[2]:s] = (t[m?m[2]:s]||0) + (m?+m[1]:1); });
+    });
+    var ks = Object.keys(t).sort(); if(!ks.length) return "";
+    return '<details class="shop"><summary>Ingrédients pour mes '+n+' recettes manquantes (à mon niveau)</summary><ul class="chips">'+
+      ks.map(function(k){ return '<li class="ch ing">'+t[k]+' × '+esc(k)+'</li>'; }).join("")+'</ul></details>';
+  }
+  function refreshShop(){
+    var s = document.getElementById("shop"); if(!s) return;
+    var o = s.querySelector("details"), w = o && o.open;
+    s.innerHTML = shopping(allItems("cuisine"));
+    o = s.querySelector("details"); if(o && w) o.open = true;
+  }
+
   function renderColl(){
     var el = document.getElementById("coll"); if(!el) return;
     var L = LISTS[tab], items = allItems(tab), groups = [], map = {};
@@ -359,29 +433,29 @@
       }).join("")+'</div>';
     h += '<div class="row" style="justify-content:space-between;width:100%"><span class="pname"><span data-pd></span> / <span data-pt></span> cochés</span></div>'+
          '<div class="bar" role="img" aria-label="Progression"><i data-bar style="width:0%"></i></div>';
-    h += '<p class="note">'+esc(L.note)+(L.src?' Sources : '+L.src.map(function(s){ return '<a href="'+s.u+'" target="_blank" rel="noopener">'+esc(s.t)+'</a>'; }).join(', ')+'.':'')+'</p>';
+    h += '<p class="note">'+esc(L.note)+(SPECIES.indexOf(tab)>=0?' Une heure ou une météo absente veut dire que le guide ne la précise pas : les filtres gardent ces entrées.':'')+(L.src?' Sources : '+L.src.map(function(s){ return '<a href="'+s.u+'" target="_blank" rel="noopener">'+esc(s.t)+'</a>'; }).join(', ')+'.':'')+'</p>';
     if(items.length){
       h += '<div class="tools"><input type="search" id="q" placeholder="Chercher dans '+esc(L.label.toLowerCase())+'" value="'+esc(q)+'" aria-label="Chercher">'+
            '<label class="chk" for="miss"><input type="checkbox" id="miss"'+(onlyMissing?' checked':'')+'>Seulement ce qui me manque</label>'+
-           (hasL?'<label class="chk" for="lvl"><input type="checkbox" id="lvl"'+(onlyLevel?' checked':'')+'>À mon niveau de passion ('+state.levels[LVKEY[tab]]+')</label>':'')+'</div>';
+           (hasL?'<label class="chk" for="lvl"><input type="checkbox" id="lvl"'+(onlyLevel?' checked':'')+'>À mon niveau de passion ('+state.levels[LVKEY[tab]]+')</label>':'')+(SPECIES.indexOf(tab)>=0 ? sel("fh",fh,"Toutes les heures",HF)+sel("fw",fw,"Toutes les météos",WF) : '')+'</div>'+(tab==="cuisine" ? '<div id="shop">'+shopping(items)+'</div>' : '');
     }
     h += '<div id="groups">';
     if(!items.length){
       h += '<div class="empty">Rien ici pour l\'instant. Ajoute ta première entrée ci-dessous.</div>';
     }
     groups.forEach(function(gr){
-      h += '<details class="grp" open><summary><span class="t">'+esc(gr.g)+'</span><span class="gcount"></span></summary><ul class="list">';
+      h += '<details class="grp" open><summary><span class="t">'+esc(gfr(gr.g))+'</span><span class="gcount"></span></summary><ul class="list">';
       gr.it.forEach(function(x, i){
         var id = 's-'+tab+'-'+norm(gr.g).replace(/[^a-z0-9]+/g,'')+'-'+i;
         var dn = disp(tab, x.n), ed = editing && editing.l===tab && editing.n===x.n;
-        var meta = (dn!==x.n ? "Nom d'origine : "+x.n+(x.m?" · ":"") : "")+x.m;
+        var meta = dn!==x.n ? "Nom d'origine : "+x.n : "", det = detail(tab, x), pp = x.p;
         var box = '<input type="checkbox" id="'+id+'" data-seen="'+esc(x.n)+'"'+(state.seen[tab][x.n]?' checked':'')+'>';
-        h += '<li data-l="'+(x.l||0)+'" data-s="'+esc(norm(dn+' '+x.n+' '+gr.g+' '+x.m))+'">';
+        h += '<li data-l="'+(x.l||0)+'" data-s="'+esc(norm(dn+' '+x.n+' '+gr.g+' '+x.m))+'" data-h="'+keys(pp.h,HF)+'" data-w="'+keys(pp.w,WF)+'">';
         if(ed){
           h += box+'<form class="renf" data-ren="'+esc(x.n)+'"><input type="text" id="ren-in" class="rin" value="'+esc(dn)+'" maxlength="80" aria-label="Nom dans ton jeu" autocomplete="off">'+
                '<button class="btn" type="submit">OK</button><button class="btn ghost" type="button" data-rencancel>Annuler</button></form>';
         } else {
-          h += '<label for="'+id+'">'+box+'<span>'+esc(dn)+(meta?'<span class="hint">'+esc(meta)+'</span>':'')+'</span></label>'+
+          h += '<label for="'+id+'">'+box+'<span>'+esc(dn)+(meta?'<span class="hint">'+esc(meta)+'</span>':'')+det+'</span></label>'+
                '<button type="button" class="x" data-edit="'+esc(x.n)+'" aria-label="Renommer '+esc(dn)+'" title="Renommer">✎</button>'+
                (x.c?'<button type="button" class="x" data-del="'+esc(x.n)+'" aria-label="Retirer '+esc(dn)+'">×</button>':'');
         }
@@ -403,7 +477,8 @@
       var any = false;
       Array.prototype.forEach.call(g.querySelectorAll("li"), function(li){
         var cb = li.querySelector("input[type=checkbox]");
-        var m = (!qq || li.getAttribute("data-s").indexOf(qq)>-1) && !(onlyMissing && cb && cb.checked) &&
+        var hh = li.getAttribute("data-h")||"", ww = li.getAttribute("data-w")||"";
+        var m = (!fh||!hh||hh.indexOf(fh)>-1) && (!fw||!ww||ww.indexOf(fw)>-1) && (!qq || li.getAttribute("data-s").indexOf(qq)>-1) && !(onlyMissing && cb && cb.checked) &&
                 !(onlyLevel && LVKEY[tab] && parseInt(li.getAttribute("data-l"),10) > (state.levels[LVKEY[tab]]||1));
         li.hidden = !m; if(m) any = true;
       });
@@ -467,6 +542,7 @@
   });
   app.addEventListener("change", function(e){
     var t = e.target;
+    if(t.id==="fh"||t.id==="fw"){ if(t.id==="fh") fh = t.value; else fw = t.value; applyFilter(); return; }
     if(t.id==="miss"){ onlyMissing = t.checked; applyFilter(); return; }
     if(t.id==="lvl"){ onlyLevel = t.checked; applyFilter(); return; }
     if(t.id==="io-file"){
@@ -491,7 +567,7 @@
     } else if(s!==null){
       if(t.checked){ state.seen[tab][s] = true; logAdd(tab, s); }
       else { delete state.seen[tab][s]; logRemove(tab, s); }
-      refreshCounts(); renderJournal(); queueSave();
+      refreshCounts(); renderJournal(); refreshShop(); queueSave();
     }
   });
   app.addEventListener("input", function(e){

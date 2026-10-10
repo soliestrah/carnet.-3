@@ -140,3 +140,15 @@ section{scroll-margin-top:72px}
 
 .status{font-size:13px;color:var(--muted);margin-top:30px;display:flex;flex-direction:column;gap:4px}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+/* Le filtre « ce qui me manque » : display:flex écrasait l'attribut hidden */
+[hidden]{display:none!important}
+/* Détails des entrées */
+.info{display:inline-flex;flex-wrap:wrap;gap:5px;width:100%;margin-top:5px}
+.ch{display:inline-block;font-size:12px;font-weight:500;line-height:1.5;padding:2px 9px;border-radius:99px;background:var(--surface);border:1px solid var(--line);color:var(--ink)}
+.ch.pl,.ch.lv{background:var(--sun-soft);border-color:var(--sun)}
+.ch.ing{border-style:dashed}
+.tools select{height:40px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;padding-inline:10px;max-width:100%}
+.shop{border:1px solid var(--line);border-radius:8px;padding:10px 14px;background:var(--surface)}
+.shop summary{cursor:pointer;font-weight:600}
+.chips{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
