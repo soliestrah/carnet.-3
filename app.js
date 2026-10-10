@@ -8,7 +8,7 @@
   function fresh(){
     var s = { dg:11,
       levels:{insectes:4, peche:3, jardinage:3, cuisine:2, oiseaux:2},
-      once:{}, daily:{date:ymd(), done:{}}, seen:{}, custom:{}, log:[], hist:{}, alias:{}, cible:{} };
+      once:{}, daily:{date:ymd(), done:{}}, seen:{}, custom:{}, log:[], hist:{}, alias:{}, cible:{}, codes:"" };
     ORDER.forEach(function(k){ s.seen[k]={}; s.custom[k]=[]; });
     return s;
   }
@@ -93,6 +93,12 @@
     return '<li><label for="c-'+group+'-'+k+'"><input type="checkbox" id="c-'+group+'-'+k+'" data-chk="'+group+':'+k+'"'+(on?" checked":"")+'><span>'+esc(t)+(h?'<span class="hint">'+esc(h)+'</span>':'')+'</span></label></li>';
   }
 
+  function dailyItem(d){
+    if(!d.n) return check("daily",d.k,d.t,d.h,!!state.daily.done[d.k]);
+    var s = "";
+    for(var i=1;i<=d.n;i++) s += '<label class="sub"><input type="checkbox" data-chk="daily:'+d.k+'_'+i+'" aria-label="'+esc(d.t)+' '+i+'"'+(state.daily.done[d.k+"_"+i]?" checked":"")+'><span>'+i+'</span></label>';
+    return '<li><div style="flex:1;min-width:0"><span>'+esc(d.t)+'</span>'+(d.h?'<span class="hint">'+esc(d.h)+'</span>':'')+'<div class="subs">'+s+'</div></div></li>';
+  }
   function ymdOf(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
   function dayLabel(d){
     if(d===ymd()) return "Aujourd'hui";
@@ -267,7 +273,8 @@
     h += '<div class="cols">';
 
     h += '<section id="sec-routine"><div><h2>Routine du jour</h2><p class="sub">Se remet à zéro chaque matin.</p></div><ul class="list">'+
-      DAILY.map(function(d){return check("daily",d.k,d.t,d.h,!!state.daily.done[d.k]);}).join("")+'</ul></section>';
+      DAILY.map(dailyItem).join("")+'</ul>'+
+      '<label class="label" for="codes" style="margin-top:14px;display:block">Codes disponibles</label><textarea id="codes" class="codes" placeholder="Colle ici les codes à utiliser…">'+esc(state.codes||"")+'</textarea></section>';
 
     h += '<section id="sec-passions"><div><h2>Passions</h2><p class="sub">Le chiffre jaune indique où dépenser tes tickets d\'amélioration en premier.</p></div><div>'+
       PASSIONS.map(function(p){
@@ -287,9 +294,6 @@
         return '<li style="flex-direction:column;gap:2px"><div class="row" style="justify-content:space-between;width:100%"><strong>Niveau '+p.l+' · '+esc(p.t)+'</strong>'+tag+'</div><span class="hint">'+esc(p.h)+'</span>'+extra+'</li>';
       }).join("")+'</ul></section>';
 
-    h += '<section id="sec-inventaire"><div><h2>Inventaire</h2><p class="sub">À faire une fois, puis à garder en tête.</p></div><ul class="list">'+
-      ONCE.map(function(o){return check("once",o.k,o.t,o.h,!!state.once[o.k]);}).join("")+'</ul></section>';
-
     h += '<section class="full" id="sec-cibles"><div><h2>À chasser</h2><p class="sub">Tes cibles du moment : étoile une entrée (☆) dans Collections ou Où aller, puis ajoute une note.</p></div><div id="targets"></div></section>';
 
     h += '<section class="full" id="sec-ou"><div><h2>Où aller maintenant ?</h2><p class="sub">Choisis l\'heure et la météo en jeu : les zones sont classées par nombre d\'insectes et d\'oiseaux que tu n\'as pas encore et qui peuvent s\'y trouver.</p></div><div id="where"></div></section>';
@@ -297,13 +301,6 @@
     h += '<section class="full" id="sec-collections"><div><h2>Collections</h2><p class="sub">Coche ce que tu as déjà. Ce qui manque à la liste, ajoute-le toi-même.</p></div><div id="coll"></div></section>';
 
     h += '<section class="full" id="sec-journal"><div><h2>Journal</h2><p class="sub">Ce que tu as coché, jour par jour, et ta régularité sur la routine.</p></div><div id="journal"></div>'+backupHtml()+'</section>';
-
-    var today = (new Date().getDay()+6)%7;
-    h += '<section class="full" id="sec-semaine"><div><h2>Semaine type</h2><p class="sub">Une suggestion pour alterner les passions sans t\'éparpiller.</p></div><div class="week">'+
-      WEEK.map(function(w,i){
-        var on = i===today;
-        return '<div class="d'+(on?' today':'')+'">'+w[0]+(on?' · aujourd\'hui':'')+'</div><div class="pills"><span class="tag'+(on?' soon':'')+'">'+w[1][0]+'</span><span class="tag">'+w[1][1]+'</span></div>';
-      }).join("")+'</div></section>';
 
     h += '</div>';
     app.innerHTML = h;
@@ -753,6 +750,8 @@
       var p = c.split(":");
       if(p[0]==="daily"){
         rollDaily(); state.daily.done[p[1]] = t.checked;
+        var par = p[1].split("_")[0], d0 = DAILY.filter(function(d){ return d.k===par && d.n; })[0];
+        if(d0){ var all = true; for(var i=1;i<=d0.n;i++) if(!state.daily.done[par+"_"+i]) all = false; state.daily.done[par] = all; }
         var dn = DAILY.filter(function(d){ return state.daily.done[d.k]; }).length;
         if(dn) state.hist[ymd()] = dn; else delete state.hist[ymd()];
       }
@@ -766,6 +765,7 @@
   });
   app.addEventListener("input", function(e){
     if(e.target.id==="q"){ q = e.target.value; applyFilter(); }
+    if(e.target.id==="codes"){ state.codes = e.target.value; queueSave(); }
     if(e.target.hasAttribute("data-note")){ state.cible[e.target.getAttribute("data-note")] = e.target.value; queueSave(); }
   });
   app.addEventListener("submit", function(e){

@@ -73,10 +73,6 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
 .bar i{display:block;height:100%;background:var(--sun);border-radius:99px;transition:width .25s}
 
-.week{display:grid;grid-template-columns:auto 1fr;gap:0 16px}
-.week>*{padding:10px 0;border-top:1px solid var(--line);min-width:0}
-.week>.d{font-weight:600}
-.week .today{color:var(--accent)}
 .pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
 
 /* Collections */
@@ -167,3 +163,6 @@ details.zone .list>li:last-child{border-bottom:0}
 .x.star{font-size:22px}
 .x.star[aria-pressed="true"]{color:var(--sun)}
 #targets{display:flex;flex-direction:column;gap:6px}
+.subs{display:flex;flex-wrap:wrap;gap:14px;margin-top:6px}
+.subs label{display:flex;flex:0 0 auto;gap:6px;align-items:center;cursor:pointer}
+.codes{width:100%;min-height:72px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:13px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:10px;box-sizing:border-box}

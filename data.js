@@ -4,13 +4,14 @@
    Un détail qui commence par "Niv. 3" sert au filtre « à mon niveau ». */
   /* ---------- Data ---------- */
   var DAILY = [
-    {k:"quetes", t:"Quêtes quotidiennes des habitants", h:"La source la plus régulière d'expérience de bâtisseur."},
-    {k:"guide", t:"Missions du Guide de la ville", h:"Elles donnent aussi des tickets et des récompenses."},
-    {k:"insectes", t:"Une session d'insectes", h:"Vise une espèce que tu n'as pas encore : région ou heure différente."},
-    {k:"peche", t:"Une session de pêche", h:"Cherche les poissons manquants avant de refaire les mêmes."},
+    {k:"habitants", t:"Requêtes des habitants", h:"5 par jour : coche chaque requête terminée.", n:5},
+    {k:"guide", t:"Missions du Guide de la ville", h:""},
+    {k:"gifts", t:"Récupérer les cadeaux quotidiens", h:""},
+    {k:"massimo", t:"Acheter les ingrédients chez Massimo", h:""},
+    {k:"rares", t:"Récupérer les matériaux rares", h:""},
+    {k:"animaux", t:"Nourrir les animaux sauvages", h:""},
+    {k:"puzzle", t:"Acheter le puzzle", h:""},
     {k:"jardin", t:"Récolter, replanter, arroser", h:"Arroser avec des amis aide pour les couleurs rares."},
-    {k:"oiseau", t:"Photographier au moins un oiseau", h:"Chaque photo ajoute une carte d'information."},
-    {k:"cuisine", t:"Cuisiner avec ton surplus", h:"Transforme ce qui encombre le sac plutôt que de le jeter."},
     {k:"ranger", t:"Vendre les doublons, ranger le sac", h:"Insectes et poissons en double se vendent. Le reste va à l'entrepôt."}
   ];
   var PASSIONS = [
@@ -25,21 +26,6 @@
     {l:13, t:"+50 emplacements d'entrepôt", h:"Niveau de guilde atteint."},
     {l:17, t:"+50 emplacements d'entrepôt", h:"Niveau de guilde atteint."},
     {l:19, t:"+50 emplacements d'entrepôt", h:"Niveau de guilde atteint."}
-  ];
-  var ONCE = [
-    {k:"sac1", t:"Première amélioration du sac chez Ka Ching", h:"Elle est gratuite. Ka Ching est en périphérie de la ville."},
-    {k:"ext", t:"Acheter une extension de sac ou d'entrepôt si besoin", h:"Les extensions ×10 (sac) et ×50 (entrepôt) coûtaient 25 étoiles chacune d'après un guide. Vérifie en jeu."},
-    {k:"mat", t:"Ne fabriquer clous, tissus, verre ou argile que pour un projet précis", h:"Les matériaux transformés prennent beaucoup de place."},
-    {k:"ing", t:"Garder seulement les ingrédients utiles à la cuisine", h:"Le reste part à l'entrepôt."}
-  ];
-  var WEEK = [
-    ["Lundi", ["Insectes","Nouvelles régions"]],
-    ["Mardi", ["Pêche","Poissons manquants"]],
-    ["Mercredi", ["Jardin","Cuisine"]],
-    ["Jeudi", ["Oiseaux","Photos"]],
-    ["Vendredi", ["Insectes ou pêche","Selon tes tickets"]],
-    ["Samedi", ["Décoration","Rangement de l'inventaire"]],
-    ["Dimanche", ["Entre amis","Arrosage à plusieurs"]]
   ];
 
   function G(g, arr, lvl){
