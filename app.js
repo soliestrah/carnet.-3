@@ -47,7 +47,7 @@
   }
   migrate();
 
-  var tab = "insectes", q = "", onlyMissing = false, onlyLevel = false, fh = "", fw = "", jf = "all", jmax = 40, ioMsg = "", editing = null;
+  var tab = "insectes", q = "", onlyMissing = false, onlyLevel = false, fh = [], fw = [], fl = "", so = "", jf = "all", jmax = 40, ioMsg = "", editing = null;
   var dbDoc = null, timer = null;
   var app = document.getElementById("app");
   var saveEl = document.getElementById("save-state");
@@ -382,9 +382,12 @@
   }
   function keys(a, M){ return a.map(function(v){ return M[v][0]; }).join(" "); }
   function names(a, M){ return a.map(function(v){ return M[v][1]; }).join(" · "); }
-  function sel(id, val, lab, M){
-    return '<select id="'+id+'" aria-label="'+lab+'"><option value="">'+lab+'</option>'+
-      Object.keys(M).map(function(k){ return '<option value="'+M[k][0]+'"'+(val===M[k][0]?' selected':'')+'>'+M[k][1]+'</option>'; }).join("")+'</select>';
+  function sel(id, val, lab, opts){
+    return '<select id="'+id+'" aria-label="'+esc(lab)+'"><option value="">'+esc(lab)+'</option>'+
+      opts.map(function(o){ return '<option value="'+esc(o[0])+'"'+(val===o[0]?' selected':'')+'>'+esc(o[1])+'</option>'; }).join("")+'</select>';
+  }
+  function tg(id, M, arr){
+    return Object.keys(M).map(function(k){ return '<button type="button" class="tab" data-tg="'+id+':'+M[k][0]+'" aria-pressed="'+(arr.indexOf(M[k][0])>-1)+'">'+M[k][1]+'</button>'; }).join("");
   }
   function detail(k, x){
     var p = parse(k, x), c = [];
@@ -427,17 +430,35 @@
       if(!map[x.g]){ map[x.g] = {g:x.g, it:[]}; groups.push(map[x.g]); }
       map[x.g].it.push(x);
     });
+    var isSp = SPECIES.indexOf(tab)>=0, zones = {};
+    items.forEach(function(x){ var l = parse(tab,x).lieu; if(l) zones[l.split(", ")[0]] = 1; });
+    if(!zones[fl]) fl = "";
+    if((so==="lieu" && !isSp) || (so==="niv" && tab!=="cuisine")) so = "";
+    var zoneOpts = Object.keys(zones).sort().map(function(z){ return [z,z]; });
+    var sortOpts = [["az","A → Z"],["za","Z → A"]].concat(isSp ? [["lieu","Par lieu"]] : tab==="cuisine" ? [["niv","Par niveau"]] : []);
+    if(so){
+      var cmp = function(a,b){ return disp(tab,a.n).localeCompare(disp(tab,b.n),"fr",{sensitivity:"base"}); };
+      var by = function(f){
+        var m = {}, o = [];
+        items.slice().sort(cmp).forEach(function(x){ var g = f(x); if(!m[g]){ m[g] = {g:g, it:[]}; o.push(m[g]); } m[g].it.push(x); });
+        return o;
+      };
+      if(so==="az") groups = [{g:"Tous, de A à Z", it:items.slice().sort(cmp)}];
+      else if(so==="za") groups = [{g:"Tous, de Z à A", it:items.slice().sort(cmp).reverse()}];
+      else if(so==="lieu") groups = by(function(x){ var l = parse(tab,x).lieu; return l ? l.split(", ")[0] : "Lieu inconnu"; }).sort(function(a,b){ return a.g==="Lieu inconnu" ? 1 : b.g==="Lieu inconnu" ? -1 : a.g.localeCompare(b.g); });
+      else if(so==="niv") groups = by(function(x){ return x.l ? "Niveau "+x.l : "Sans niveau"; }).sort(function(a,b){ return (parseInt(a.g.slice(7),10)||0)-(parseInt(b.g.slice(7),10)||0); });
+    }
     var h = '<div class="tabs" role="tablist" aria-label="Collections">'+
       ORDER.map(function(k){
         return '<button type="button" class="tab" role="tab" id="tab-'+k+'" data-tab="'+k+'" aria-selected="'+(k===tab)+'">'+LISTS[k].label+' <small data-tc="'+k+'"></small></button>';
       }).join("")+'</div>';
     h += '<div class="row" style="justify-content:space-between;width:100%"><span class="pname"><span data-pd></span> / <span data-pt></span> cochés</span></div>'+
          '<div class="bar" role="img" aria-label="Progression"><i data-bar style="width:0%"></i></div>';
-    h += '<p class="note">'+esc(L.note)+(SPECIES.indexOf(tab)>=0?' Une heure ou une météo absente veut dire que le guide ne la précise pas : les filtres gardent ces entrées.':'')+(L.src?' Sources : '+L.src.map(function(s){ return '<a href="'+s.u+'" target="_blank" rel="noopener">'+esc(s.t)+'</a>'; }).join(', ')+'.':'')+'</p>';
+    h += '<p class="note">'+esc(L.note)+(SPECIES.indexOf(tab)>=0?' Une heure ou une météo absente veut dire que le guide ne la précise pas : les filtres heure et météo gardent ces entrées.':'')+(L.src?' Sources : '+L.src.map(function(s){ return '<a href="'+s.u+'" target="_blank" rel="noopener">'+esc(s.t)+'</a>'; }).join(', ')+'.':'')+'</p>';
     if(items.length){
       h += '<div class="tools"><input type="search" id="q" placeholder="Chercher dans '+esc(L.label.toLowerCase())+'" value="'+esc(q)+'" aria-label="Chercher">'+
            '<label class="chk" for="miss"><input type="checkbox" id="miss"'+(onlyMissing?' checked':'')+'>Seulement ce qui me manque</label>'+
-           (hasL?'<label class="chk" for="lvl"><input type="checkbox" id="lvl"'+(onlyLevel?' checked':'')+'>À mon niveau de passion ('+state.levels[LVKEY[tab]]+')</label>':'')+(SPECIES.indexOf(tab)>=0 ? sel("fh",fh,"Toutes les heures",HF)+sel("fw",fw,"Toutes les météos",WF) : '')+'</div>'+(tab==="cuisine" ? '<div id="shop">'+shopping(items)+'</div>' : '');
+           (hasL?'<label class="chk" for="lvl"><input type="checkbox" id="lvl"'+(onlyLevel?' checked':'')+'>À mon niveau de passion ('+state.levels[LVKEY[tab]]+')</label>':'')+sel("so",so,"Ordre du guide",sortOpts)+(isSp ? sel("fl",fl,"Tous les lieux",zoneOpts) : '')+'</div><div class="tools">'+(isSp ? '<span class="label">Heure</span>'+tg("fh",HF,fh)+'<span class="label">Météo</span>'+tg("fw",WF,fw) : '')+'<button type="button" class="btn ghost" data-reset>Réinitialiser les filtres</button></div>'+(tab==="cuisine" ? '<div id="shop">'+shopping(items)+'</div>' : '');
     }
     h += '<div id="groups">';
     if(!items.length){
@@ -450,7 +471,7 @@
         var dn = disp(tab, x.n), ed = editing && editing.l===tab && editing.n===x.n;
         var meta = dn!==x.n ? "Nom d'origine : "+x.n : "", det = detail(tab, x), pp = x.p;
         var box = '<input type="checkbox" id="'+id+'" data-seen="'+esc(x.n)+'"'+(state.seen[tab][x.n]?' checked':'')+'>';
-        h += '<li data-l="'+(x.l||0)+'" data-s="'+esc(norm(dn+' '+x.n+' '+gr.g+' '+x.m))+'" data-h="'+keys(pp.h,HF)+'" data-w="'+keys(pp.w,WF)+'">';
+        h += '<li data-l="'+(x.l||0)+'" data-s="'+esc(norm(dn+' '+x.n+' '+gr.g+' '+x.m))+'" data-h="'+keys(pp.h,HF)+'" data-w="'+keys(pp.w,WF)+'" data-p="'+esc(pp.lieu||"")+'">';
         if(ed){
           h += box+'<form class="renf" data-ren="'+esc(x.n)+'"><input type="text" id="ren-in" class="rin" value="'+esc(dn)+'" maxlength="80" aria-label="Nom dans ton jeu" autocomplete="off">'+
                '<button class="btn" type="submit">OK</button><button class="btn ghost" type="button" data-rencancel>Annuler</button></form>';
@@ -478,7 +499,8 @@
       Array.prototype.forEach.call(g.querySelectorAll("li"), function(li){
         var cb = li.querySelector("input[type=checkbox]");
         var hh = li.getAttribute("data-h")||"", ww = li.getAttribute("data-w")||"";
-        var m = (!fh||!hh||hh.indexOf(fh)>-1) && (!fw||!ww||ww.indexOf(fw)>-1) && (!qq || li.getAttribute("data-s").indexOf(qq)>-1) && !(onlyMissing && cb && cb.checked) &&
+        var lp = li.getAttribute("data-p")||"";
+        var m = (!fh.length||!hh||fh.some(function(k){ return hh.indexOf(k)>-1; })) && (!fw.length||!ww||fw.some(function(k){ return ww.indexOf(k)>-1; })) && (!fl||lp.indexOf(fl)>-1) && (!qq || li.getAttribute("data-s").indexOf(qq)>-1) && !(onlyMissing && cb && cb.checked) &&
                 !(onlyLevel && LVKEY[tab] && parseInt(li.getAttribute("data-l"),10) > (state.levels[LVKEY[tab]]||1));
         li.hidden = !m; if(m) any = true;
       });
@@ -529,6 +551,13 @@
     if(jb){ jf = jb.getAttribute("data-jf"); jmax = 40; renderJournal(); return; }
     var jm = e.target.closest("[data-jmore]");
     if(jm){ jmax += 40; renderJournal(); return; }
+    var tgb = e.target.closest("[data-tg]");
+    if(tgb){
+      var pr = tgb.getAttribute("data-tg").split(":"), arr = pr[0]==="fh" ? fh : fw, ix = arr.indexOf(pr[1]);
+      if(ix<0) arr.push(pr[1]); else arr.splice(ix,1);
+      tgb.setAttribute("aria-pressed", String(ix<0)); applyFilter(); return;
+    }
+    if(e.target.closest("[data-reset]")){ fh = []; fw = []; fl = ""; q = ""; onlyMissing = false; onlyLevel = false; renderColl(); return; }
     var t = e.target.closest("[data-tab]");
     if(t){ tab = t.getAttribute("data-tab"); q = ""; editing = null; renderColl(); return; }
     var x = e.target.closest("[data-del]");
@@ -542,7 +571,8 @@
   });
   app.addEventListener("change", function(e){
     var t = e.target;
-    if(t.id==="fh"||t.id==="fw"){ if(t.id==="fh") fh = t.value; else fw = t.value; applyFilter(); return; }
+    if(t.id==="fl"){ fl = t.value; applyFilter(); return; }
+    if(t.id==="so"){ so = t.value; renderColl(); return; }
     if(t.id==="miss"){ onlyMissing = t.checked; applyFilter(); return; }
     if(t.id==="lvl"){ onlyLevel = t.checked; applyFilter(); return; }
     if(t.id==="io-file"){
