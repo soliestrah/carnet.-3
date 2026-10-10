@@ -212,6 +212,22 @@
   var app = document.getElementById("app");
   var qEl = "";
   var computeTimer = null;
+  var lastRes = null;   /* dernier plan calculé, pour les boutons « j'ai cuisiné » */
+  var undoSnap = null;  /* inventaire d'avant le dernier « j'ai cuisiné » */
+  var doneMsg = "";
+
+  /* Retire de l'inventaire les ingrédients consommés : uses = {idIngrédient: quantité}. */
+  function consume(uses, label){
+    var inv = S.inv[S.mode], before = {};
+    Object.keys(inv).forEach(function(k){ before[k] = inv[k]; });
+    undoSnap = {mode:S.mode, inv:before};
+    Object.keys(uses).forEach(function(k){
+      var left = (inv[k]||0) - uses[k];
+      if(left>0) inv[k] = left; else delete inv[k];
+    });
+    doneMsg = label;
+    queueSave(); render();
+  }
 
   function groupOpen(cat, cx){
     if(cat==="plats") return false;
@@ -320,10 +336,16 @@
   function update(){
     var el = document.getElementById("plan"); if(!el) return;
     var cx = ctx(), info = mainInfo();
+    lastRes = null;
+
+    var undoHtml = "";
+    if(undoSnap && undoSnap.mode===S.mode){
+      undoHtml = '<div class="doneBar"><span>'+esc(doneMsg||"Inventaire mis à jour.")+'</span> <button type="button" class="btn ghost" data-undo>Annuler</button></div>';
+    }
 
     var anyInv = Object.keys(cx.inv).some(function(k){ return cx.inv[k]>0; });
     if(!anyInv){
-      el.innerHTML = '<p class="empty">Entre des quantités dans ton inventaire pour obtenir un plan.</p>';
+      el.innerHTML = undoHtml+'<p class="empty">Entre des quantités dans ton inventaire pour obtenir un plan.</p>';
       return;
     }
 
@@ -342,7 +364,8 @@
 
     var res = solve(cx, eligible);
     var ids = Object.keys(res.counts);
-    var h = "";
+    lastRes = res;
+    var h = undoHtml;
 
     /* Pour comparer : tout revendre tel quel */
     var rawAll = 0;
@@ -356,6 +379,10 @@
       '<div><span class="label">Valeur de vente</span><span class="big">'+fmt(res.value)+'<small> G</small></span></div>'+
       '<div><span class="label">Gain net</span><span class="big">'+(gainNet>=0?'+':'−')+fmt(Math.abs(gainNet))+'<small> G</small></span></div>'+
     '</div>';
+
+    if(ids.length){
+      h += '<div class="row"><button type="button" class="btn" data-cook="all">'+(S.mode==="cuisine"?"J'ai tout cuisiné":"J'ai tout fabriqué")+' : mettre l\'inventaire à jour</button></div>';
+    }
 
     if(!ids.length){
       h += '<p class="empty">Rien de rentable avec cet inventaire.'+
@@ -380,7 +407,8 @@
         }
         h += '<li class="prow"><div class="ptop"><span class="pcount">× '+n+'</span><div class="pn"><strong>'+esc(r.n)+'</strong>'+(chips?'<span class="info">'+chips+'</span>':'')+'</div>'+
           '<div class="pv"><strong>'+fmt(line)+' G</strong><span class="hint">'+fmt(x.value)+' G pièce'+(cost>0?' · gain net '+fmt(gain)+' G':'')+'</span></div></div>'+
-          '<span class="hint">Consomme : '+esc(ing)+'</span></li>';
+          '<span class="hint">Consomme : '+esc(ing)+'</span>'+
+          '<div><button type="button" class="btn ghost" data-cook="'+esc(id)+'">Fait : retirer de l\'inventaire</button></div></li>';
       });
       h += '</ol>';
 
@@ -446,6 +474,7 @@
     var t = e.target, li = t.closest("li[data-id]");
     if(t.classList.contains("qty") && li){
       var id = li.getAttribute("data-id"), v = intOrNull(t.value);
+      undoSnap = null; /* tu as modifié l'inventaire à la main : l'annulation ne serait plus sûre */
       if(v) S.inv[S.mode][id] = v; else delete S.inv[S.mode][id];
       li.classList.toggle("has", !!v);
       var d = li.closest("details.grp");
@@ -477,6 +506,26 @@
   });
 
   app.addEventListener("click", function(e){
+    if(e.target.closest("[data-undo]")){
+      if(undoSnap && undoSnap.mode===S.mode){ S.inv[S.mode] = undoSnap.inv; }
+      undoSnap = null; doneMsg = ""; queueSave(); render(); return;
+    }
+    var ck = e.target.closest("[data-cook]");
+    if(ck && lastRes){
+      var which = ck.getAttribute("data-cook"), uses = {}, label;
+      if(which==="all"){
+        Object.keys(lastRes.uses).forEach(function(rid){
+          Object.keys(lastRes.uses[rid]).forEach(function(k){ uses[k] = (uses[k]||0) + lastRes.uses[rid][k]; });
+        });
+        label = "Inventaire mis à jour : tout le plan est retiré.";
+      } else if(lastRes.uses[which]){
+        uses = lastRes.uses[which];
+        var r0 = recList(S.mode).filter(function(r){ return r.id===which; })[0];
+        label = "Inventaire mis à jour : "+(lastRes.counts[which]||1)+" × "+(r0 ? r0.n : which)+" retiré"+((lastRes.counts[which]||1)>1?"s":"")+".";
+      }
+      if(label) consume(uses, label);
+      return;
+    }
     var m = e.target.closest("[data-mode]");
     if(m){ S.mode = m.getAttribute("data-mode")==="meubles" ? "meubles" : "cuisine"; qEl = ""; queueSave(); render(); return; }
     if(e.target.closest("#inv-reset")){

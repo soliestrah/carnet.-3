@@ -207,3 +207,7 @@ ol.plan{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
 .pv{text-align:right;flex:none;display:flex;flex-direction:column}
 .pv strong{font-variant-numeric:tabular-nums}
 .list.near>li{align-items:center}
+
+/* Barre « inventaire mis à jour » (page Profits) */
+.doneBar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 14px;border:1px solid var(--good);border-radius:8px;background:var(--surface);font-size:14px}
+.prow .btn.ghost{height:34px;font-size:13px;margin-top:6px}

@@ -54,6 +54,8 @@ Les guides traduisent les noms chacun à leur façon et ils ne correspondent pas
 - **Filtres** : seulement les recettes de ton niveau de cuisine et/ou cochées dans Collections (lus dans le carnet, jamais modifiés).
 - **Prix de revente** : modifiables ligne par ligne. Un prix laissé vide compte 0 (œufs, lait, poissons… dont le prix de revente n'est pas publié). Les plats composés (Picnic Set, Candlelight Dinner, Afternoon Tea) demandent des plats déjà cuisinés : ajoute-les à l'inventaire, section « Plats déjà cuisinés ».
 - **Meubles** : aucun guide ne donne de prix de revente fiable. Les 6 recettes confirmées sont préremplies, tu saisis leur prix, et tu peux ajouter tes propres meubles (« 5 Bois, 2 Pierre »).
+- **J'ai cuisiné** : le bouton « J'ai tout cuisiné » retire du sac tout ce que le plan consomme, et « Fait » sur une ligne ne retire que ce plat. Le plan est recalculé avec ce qu'il reste. « Annuler » remet l'inventaire d'avant (il disparaît si tu modifies une quantité à la main).
+- **Ingrédients sans recette** : citrouille, paddy, œuf pasteurisé, pâte de haricots et poudre de matcha sont dans l'inventaire, mais aucune recette ne les utilise encore dans `profits-data.js`.
 - Le calcul est glouton avec plusieurs essais (graine fixe, résultat stable). C'est une très bonne suggestion, pas une preuve d'optimum.
 - Réglages et inventaire enregistrés dans le navigateur sous la clé `carnet-heartopia-profits-v1` (pas dans l'export CSV).
 

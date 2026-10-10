@@ -60,6 +60,9 @@ PD.ING = {
     {id:"tea",       fr:"Feuilles de thé",en:"Tea Leaves", cat:"cultures", p:75,  buy:250},
     {id:"cocoa",     fr:"Cacao",          en:"Cocoa",      cat:"cultures", p:330, buy:110},
     {id:"avocado",   fr:"Avocat",         en:"Avocado",    cat:"cultures", p:540, buy:180},
+    /* Ajoutés à la demande : prix inconnus (à saisir dans la page), recettes pas encore dans les données. */
+    {id:"pumpkin",   fr:"Citrouille",     en:"Pumpkin",    cat:"cultures", p:null},
+    {id:"paddy",     fr:"Paddy (riz non décortiqué)", en:"Paddy", cat:"cultures", p:null},
     /* Fruits cueillis dans la nature */
     {id:"apple",     fr:"Pomme",          en:"Apple",      cat:"fruits", p:null, g:["fruit"]},
     {id:"blueberry", fr:"Myrtille",       en:"Blueberry",  cat:"fruits", p:null, g:["fruit"]},
@@ -78,6 +81,8 @@ PD.ING = {
     {id:"butter",    fr:"Beurre",         en:"Butter",      cat:"ferme", p:null, buy:150},
     {id:"meat",      fr:"Viande",         en:"Meat",        cat:"ferme", p:null, buy:200},
     {id:"oil",       fr:"Huile de cuisson", en:"Cooking Oil", cat:"ferme", p:null, buy:100},
+    {id:"past_egg",  fr:"Œuf pasteurisé", en:"Pasteurized Egg", cat:"ferme", p:null},
+    {id:"bean_paste",fr:"Pâte de haricots", en:"Bean Paste",  cat:"ferme", p:null},
     /* Mer */
     {id:"fish",      fr:"Poisson (n'importe lequel)",     en:"Any fish",      cat:"mer", p:null},
     {id:"shellfish", fr:"Crustacé ou coquillage (n'importe lequel)", en:"Shellfish / King Crab", cat:"mer", p:null},
@@ -93,6 +98,7 @@ PD.ING = {
     {id:"indigo_sugar", fr:"Sucre indigo", en:"Indigo Sugar", cat:"sucres", p:null, buy:150},
     {id:"violet_sugar", fr:"Sucre violet", en:"Violet Sugar", cat:"sucres", p:null, buy:150},
     {id:"honey",     fr:"Miel",           en:"Honey",        cat:"sucres", p:null},
+    {id:"matcha",    fr:"Poudre de matcha", en:"Matcha Powder", cat:"sucres", p:null},
     {id:"lemon",     fr:"Citron",         en:"Lemon",        cat:"sucres", p:null},
     /* Plats déjà cuisinés. Leur prix par défaut est celui de la recette (calculé dans profits.js). */
     {id:"d_tomato_sauce", fr:"Sauce tomate",     en:"Tomato Sauce",     cat:"plats", dish:"tomato_sauce"},
