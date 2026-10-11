@@ -32,14 +32,15 @@ Format, une ligne par information, colonnes `type;cle;valeur;date` :
 | `ajout` | liste concernée | nom ajouté à la main | |
 | `routine` | jour (`AAAA-MM-JJ`) | nombre de cases de routine cochées | |
 | `alias` | liste concernée | nom d'origine du guide | (5e colonne `alias`) ton nom à toi |
-| `cible` | liste concernée | nom de l'entrée étoilée | (5e colonne) ta note |
+| `cible` | liste concernée | nom de l'entrée épinglée en priorité | (5e colonne) sa note |
+| `note` | liste concernée | nom d'une entrée non épinglée | (5e colonne) sa note |
 
 Les noms qui commencent par `=`, `+`, `-` ou `@` sont préfixés d'une apostrophe à l'export pour éviter qu'un tableur les prenne pour une formule. L'import retire cette apostrophe.
 
 ## Où aller maintenant ? et À chasser
 
 - **Où aller** : choisis une heure et/ou une météo, les zones sont classées par nombre d'insectes et d'oiseaux manquants à ton niveau de passion. Les entrées dont le guide ne précise pas l'heure ou la météo sont marquées « à vérifier ».
-- **À chasser** : l'étoile ☆ (dans Collections et dans Où aller) ajoute une entrée à tes cibles, avec une note libre. Le bouton « Attrapé » la coche. Dans Collections, « Seulement mes cibles » filtre la liste. Les cibles et notes sont dans l'export CSV (lignes `cible`).
+- **À chasser** : la liste se remplit toute seule avec tout ce que tu n'as pas encore attrapé (insectes, poissons, oiseaux), rien à étoiler. Elle se vide à mesure que tu coches dans Collections ou que tu appuies sur « Attrapé ». Filtres : recherche, « À mon niveau de passion » (activé par défaut) et « Possibles avec l'heure et la météo » de Où aller. L'étoile ☆ est facultative : elle épingle une entrée dans « ★ Mes priorités », en haut. Chaque entrée peut avoir une note libre, épinglée ou non. Priorités et notes sont dans l'export CSV (lignes `cible` pour les priorités, `note` pour les notes des entrées non épinglées).
 
 ## Renommer une entrée
 
@@ -55,7 +56,7 @@ Les guides traduisent les noms chacun à leur façon et ils ne correspondent pas
 - **Prix de revente** : modifiables ligne par ligne. Préremplis d'après des guides (roonby.com, treyexgaming.com, heartopia.life) : fruits cueillis, champignons, truffe, lait (≈40), fromage (≈80), bois, branches, pierre et minerai. Lait et fromage sont des valeurs approximatives : vérifie en jeu. Un prix laissé vide compte 0 (œuf, beurre, viande, huile, sucres, miel, citron, café, matcha, poissons, crustacés, citrouille, paddy, pâte de haricots : aucun guide ne publie leur prix de revente). Les plats composés (Picnic Set, Candlelight Dinner, Afternoon Tea) demandent des plats déjà cuisinés : ajoute-les à l'inventaire, section « Plats déjà cuisinés ».
 - **Meubles** : aucun guide ne donne de prix de revente fiable. Les 6 recettes confirmées sont préremplies, tu saisis leur prix, et tu peux ajouter tes propres meubles (« 5 Bois, 2 Pierre »).
 - **J'ai cuisiné** : le bouton « J'ai tout cuisiné » retire du sac tout ce que le plan consomme, et « Fait » sur une ligne ne retire que ce plat. Les plats obtenus sont ajoutés à « Plats déjà cuisinés » (« Annuler » les retire aussi). Si tu as déjà coché au moins une recette dans Collections, les recettes cuisinées y sont cochées aussi (« Annuler » ne les décoche pas). Le plan est recalculé avec ce qu'il reste. « Annuler » remet l'inventaire d'avant (il disparaît si tu modifies une quantité à la main).
-- **Ingrédients sans recette** : la citrouille compte comme légume (salade, bagel). Œuf pasteurisé (Onsen Egg, 130 G) et poudre de matcha (Grass Cake, 690 G) ont maintenant une recette. Paddy et pâte de haricots sont dans l'inventaire, mais aucune recette ne les utilise encore. Rose Tea (2 feuilles de thé, 2 roses rouges) et Daisy Tea (2 feuilles de thé, 2 marguerites blanches) sont ajoutés, marqués « ingrédients à vérifier ». Grass Cake, Onsen Egg, Rose Tea et Daisy Tea sont absentes de Collections > Cuisine : ajoute-les à la main pour les cocher.
+- **Ingrédients sans recette** : la citrouille compte comme légume (salade, bagel). Œuf pasteurisé (Onsen Egg, 130 G) et poudre de matcha (Grass Cake, 690 G) ont maintenant une recette. Paddy et pâte de haricots sont dans l'inventaire, mais aucune recette ne les utilise encore. Rose Tea (2 feuilles de thé, 2 roses rouges) et Daisy Tea (2 feuilles de thé, 2 marguerites blanches) sont ajoutés, marqués « ingrédients à vérifier ». Thés de niveau 11-12 (heartodex.com, octobre 2026) : Mellow Black Tea et Refreshing Green Tea se font avec 2 feuilles de thé fixes + 2 ingrédients au choix (lait, cacao ou feuille de thé pour le noir ; matcha, lait ou feuille de thé pour le vert), le carnet prend la version à 4 feuilles ; Matcha Green Milk Tea = 2 feuilles de thé + 1 matcha + 1 lait (700 G) ; Exquisite Afternoon Tea = 2 Cheesecakes + 2 Mellow Black Teas (2 970 G, ajoute-les à « Plats déjà cuisinés »). Grass Cake, Onsen Egg, Rose Tea et Daisy Tea sont absentes de Collections > Cuisine : ajoute-les à la main pour les cocher.
 - Le calcul est glouton avec plusieurs essais (graine fixe, résultat stable). C'est une très bonne suggestion, pas une preuve d'optimum.
 - Réglages et inventaire enregistrés dans le navigateur sous la clé `carnet-heartopia-profits-v1` (pas dans l'export CSV).
 

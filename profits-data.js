@@ -118,6 +118,7 @@ PD.ING = {
     {id:"d_coffee",       fr:"Coffee (boisson)", en:"Coffee",           cat:"plats", dish:"coffee", g:["drink"]},
     {id:"d_latte",        fr:"Latte (boisson)",  en:"Latte",            cat:"plats", dish:"latte", g:["drink"]},
     {id:"d_milkshake",    fr:"Milkshake",        en:"Milkshake",        cat:"plats", dish:"milkshake", g:["drink"]},
+    {id:"d_cheesecake",   fr:"Cheesecake",       en:"Cheesecake",       cat:"plats", dish:"cheesecake"},
     {id:"d_blacktea",     fr:"Mellow Black Tea", en:"Mellow Black Tea", cat:"plats", dish:"mellow_black_tea", g:["drink"]},
     {id:"d_greentea",     fr:"Refreshing Green Tea", en:"Refreshing Green Tea", cat:"plats", dish:"refreshing_green_tea", g:["drink"]}
   ],
@@ -194,8 +195,11 @@ PD.REC = {
     {id:"baked_eggplant_t",n:"Baked Eggplant with Meat (avec 4 tomates)", c:"Baked Eggplant with Meat", l:9, t:1230, rp:6400, need:[["eggplant",1],["meat",1],["oil",1],["tomato",4]]},
     {id:"king_crab",      n:"Steamed King Crab", c:"Steamed King Crab", l:10, t:1990, rp:6400, need:[["shellfish",3],["butter",1]]},
     {id:"golden_crab",    n:"Steamed Golden King Crab", c:"Steamed King Crab", l:10, t:2980, rp:6400, need:[["goldcrab",3],["butter",1]]},
-    {id:"black_tea",      n:"Mellow Black Tea",c:"Mellow Black Tea",l:11, t:840,  rp:6400, need:[["tea",3],["sugar",1]], out:"d_blacktea", v:1},
-    {id:"green_tea",      n:"Refreshing Green Tea", c:"Refreshing Green Tea", l:12, t:500, rp:6400, need:[["tea",2],["honey",1],["lemon",1]], out:"d_greentea", v:1},
+    {id:"black_tea",      n:"Mellow Black Tea",c:"Mellow Black Tea",l:11, t:840,  rp:6400, need:[["tea",4]], out:"d_blacktea", v:1},
+    {id:"green_tea",      n:"Refreshing Green Tea", c:"Refreshing Green Tea", l:12, t:500, rp:6400, need:[["tea",4]], out:"d_greentea", v:1},
+    /* Thés de niveau 12 (heartodex.com, octobre 2026). Mellow Black Tea et Refreshing Green Tea : 2 feuilles de thé fixes + 2 au choix (lait, cacao ou feuille de thé pour le noir ; matcha, lait ou feuille de thé pour le vert). La base à 4 feuilles est la version « sans rien d'autre » ; avec du lait on obtient d'autres plats (Mellow Milk Tea, Green Milk Tea). */
+    {id:"matcha_milk_tea", n:"Matcha Green Milk Tea", c:"Matcha Green Milk Tea", l:12, t:700, rp:0, need:[["tea",2],["matcha",1],["milk",1]]},
+    {id:"exq_afternoon",  n:"Exquisite Afternoon Tea", c:"Exquisite Afternoon Tea", l:12, t:2970, rp:0, need:[["d_cheesecake",2],["d_blacktea",2]]},
     {id:"avocado_cup",    n:"Shrimp Avocado Cup", c:"Shrimp Avocado Cup", l:13, t:1560, rp:6400, need:[["avocado",2]], v:1},
     {id:"stuffed_crab",   n:"Cheese Shrimp Stuffed Crab", c:"Cheese Shrimp Stuffed Crab", l:13, t:1440, rp:6400, need:[["shellfish",2]], v:1}
   ],

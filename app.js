@@ -8,7 +8,7 @@
   function fresh(){
     var s = { dg:11,
       levels:{insectes:4, peche:3, jardinage:3, cuisine:2, oiseaux:2},
-      once:{}, daily:{date:ymd(), done:{}}, seen:{}, custom:{}, log:[], hist:{}, alias:{}, cible:{}, codes:"" };
+      once:{}, daily:{date:ymd(), done:{}}, seen:{}, custom:{}, log:[], hist:{}, alias:{}, cible:{}, notes:{}, codes:"" };
     ORDER.forEach(function(k){ s.seen[k]={}; s.custom[k]=[]; });
     return s;
   }
@@ -38,6 +38,8 @@
     if(!state.hist || typeof state.hist!=="object") state.hist = {};
     if(!state.alias || typeof state.alias!=="object") state.alias = {};
     if(!state.cible || typeof state.cible!=="object" || Array.isArray(state.cible)) state.cible = {};
+    if(!state.notes || typeof state.notes!=="object" || Array.isArray(state.notes)) state.notes = {};
+    Object.keys(state.cible).forEach(function(ck){ if(state.cible[ck] && !state.notes[ck]) state.notes[ck] = state.cible[ck]; state.cible[ck] = ""; });
     ORDER.forEach(function(k){ if(!state.alias[k] || typeof state.alias[k]!=="object") state.alias[k] = {}; });
     var alias = {"Pigeon Africain à Olive":"Pigeon olive africain","Sizerin Flammé":"Redpolis","Grand Ara Vert":"Ara de Buffon","Ara Rouge et Vert":"Ara chloroptère"};
     var map = {};
@@ -49,7 +51,7 @@
   migrate();
 
   var tab = "insectes", q = "", onlyMissing = false, onlyLevel = false, fh = [], fw = [], fl = "", so = "", jf = "all", jmax = 40, ioMsg = "", editing = null;
-  var wt = "", ww = "", onlyTarget = false, tnow = false;
+  var wt = "", ww = "", onlyTarget = false, tnow = false, tlvl = true, tq = "";
   var dbDoc = null, timer = null;
   var app = document.getElementById("app");
   var saveEl = document.getElementById("save-state");
@@ -165,7 +167,11 @@
     });
     Object.keys(state.cible).forEach(function(ck){
       var i = ck.indexOf("|"); if(i<1) return;
-      rows.push(["cible", ck.slice(0,i), ck.slice(i+1), "", state.cible[ck]||""]);
+      rows.push(["cible", ck.slice(0,i), ck.slice(i+1), "", state.notes[ck]||""]);
+    });
+    Object.keys(state.notes).forEach(function(ck){
+      var i = ck.indexOf("|"); if(i<1 || !state.notes[ck] || hasOwn(state.cible, ck)) return;
+      rows.push(["note", ck.slice(0,i), ck.slice(i+1), "", state.notes[ck]]);
     });
     Object.keys(hist).sort().forEach(function(d){ rows.push(["routine",d,hist[d],""]); });
     return rows.map(function(r){ return r.map(csvField).join(";"); }).join("\r\n")+"\r\n";
@@ -236,7 +242,10 @@
         }
       } else if(type==="cible"){
         var cn = clean(r[4]), ck = key+"|"+val;
-        if(ORDER.indexOf(key)>=0 && val){ if(!Object.prototype.hasOwnProperty.call(state.cible, ck) || cn) state.cible[ck] = cn; settings++; } else skipped++;
+        if(ORDER.indexOf(key)>=0 && val){ state.cible[ck] = ""; if(cn) state.notes[ck] = cn; settings++; } else skipped++;
+      } else if(type==="note"){
+        var nn = clean(r[4]), nk = key+"|"+val;
+        if(ORDER.indexOf(key)>=0 && val && nn){ state.notes[nk] = nn; settings++; } else skipped++;
       } else if(type==="alias"){
         var al = clean(r[4]);
         if(ORDER.indexOf(key)>=0 && val && al){ if(al!==val) state.alias[key][val] = al; settings++; } else skipped++;
@@ -294,7 +303,7 @@
         return '<li style="flex-direction:column;gap:2px"><div class="row" style="justify-content:space-between;width:100%"><strong>Niveau '+p.l+' · '+esc(p.t)+'</strong>'+tag+'</div><span class="hint">'+esc(p.h)+'</span>'+extra+'</li>';
       }).join("")+'</ul></section>';
 
-    h += '<section class="full" id="sec-cibles"><div><h2>À chasser</h2><p class="sub">Tes cibles du moment : étoile une entrée (☆) dans Collections ou Où aller, puis ajoute une note.</p></div><div id="targets"></div></section>';
+    h += '<section class="full" id="sec-cibles"><div><h2>À chasser</h2><p class="sub">Tout ce que tu n\'as pas encore attrapé (insectes, poissons, oiseaux), sans rien à étoiler. L\'étoile ☆ sert seulement à épingler quelques priorités en haut de la liste.</p></div><div id="targets"></div></section>';
 
     h += '<section class="full" id="sec-ou"><div><h2>Où aller maintenant ?</h2><p class="sub">Choisis l\'heure et la météo en jeu : les zones sont classées par nombre d\'insectes et d\'oiseaux que tu n\'as pas encore et qui peuvent s\'y trouver.</p></div><div id="where"></div></section>';
 
@@ -443,10 +452,11 @@
 
 
   /* ---------- À chasser : étoiles et notes ---------- */
+  function hasOwn(o, k){ return Object.prototype.hasOwnProperty.call(o, k); }
   function isTarget(l, n){ return Object.prototype.hasOwnProperty.call(state.cible, l+"|"+n); }
   function starBtn(l, n){
     var on = isTarget(l, n);
-    return '<button type="button" class="x star" data-star="'+esc(l+"|"+n)+'" aria-pressed="'+on+'" aria-label="'+(on?'Retirer des cibles : ':'Ajouter aux cibles : ')+esc(disp(l,n))+'" title="Cible">'+(on?"★":"☆")+'</button>';
+    return '<button type="button" class="x star" data-star="'+esc(l+"|"+n)+'" aria-pressed="'+on+'" aria-label="'+(on?'Retirer des priorités : ':'Épingler en priorité : ')+esc(disp(l,n))+'" title="Priorité">'+(on?"★":"☆")+'</button>';
   }
   function setTargetUI(key){
     var i = key.indexOf("|"), l = key.slice(0,i), n = key.slice(i+1), on = isTarget(l, n);
@@ -469,34 +479,46 @@
   }
   function renderTargets(){
     var el = document.getElementById("targets"); if(!el) return;
-    var groups = [], done = 0, hidden = 0, total = 0;
-    ORDER.forEach(function(k){
-      var rows = [];
+    var open = null, prev = el.querySelectorAll("details.zone");
+    if(prev.length){ open = {}; Array.prototype.forEach.call(prev, function(d){ if(d.open) open[d.getAttribute("data-z")] = 1; }); }
+    var qq = norm(tq.trim()), pins = [], groups = [], hiddenCond = 0, hiddenLvl = 0, left = 0;
+    SPECIES.forEach(function(k){
+      var rows = [], lv = LVKEY[k] ? (state.levels[LVKEY[k]] || 1) : 99;
       allItems(k).forEach(function(x){
-        if(!isTarget(k, x.n)) return;
-        total++;
-        if(state.seen[k][x.n]){ done++; return; }
+        if(state.seen[k][x.n]) return;
+        left++;
+        if(qq && norm(disp(k, x.n)+" "+x.n).indexOf(qq)<0) return;
+        if(tlvl && x.l && x.l > lv){ hiddenLvl++; return; }
         var c = tcond(k, x);
-        if(tnow && c==="no"){ hidden++; return; }
-        rows.push({k:k, x:x, c:c});
+        if(tnow && c==="no"){ hiddenCond++; return; }
+        var r = {k:k, x:x, c:c};
+        if(isTarget(k, x.n)) pins.push(r); else rows.push(r);
       });
       if(rows.length) groups.push({k:k, rows:rows});
     });
-    var h = '<label class="chk" for="tnow"><input type="checkbox" id="tnow"'+(tnow?' checked':'')+'>Seulement ceux possibles avec l\'heure et la météo choisies dans « Où aller »</label>';
-    if(!groups.length){
-      h += '<div class="empty">'+(total ? (hidden ? 'Aucune cible possible avec ces conditions : '+hidden+' masquée'+(hidden>1?'s':'')+'.' : 'Toutes tes cibles sont attrapées.') : 'Aucune cible pour l\'instant. Clique sur ☆ à droite d\'une entrée pour l\'ajouter ici.')+'</div>';
+    var row = function(r, withTag){
+      var key = r.k+"|"+r.x.n;
+      return '<li><div style="flex:1;min-width:0"><span class="pname">'+esc(disp(r.k, r.x.n))+'</span>'+(r.c==="maybe" ? ' <span class="tag soon">à vérifier</span>' : '')+(withTag ? ' <span class="tag">'+esc(LISTS[r.k].label)+'</span>' : '')+detail(r.k, r.x)+
+        '<input type="text" class="rin" style="width:100%;margin-top:6px" data-note="'+esc(key)+'" value="'+esc(state.notes[key]||"")+'" maxlength="200" placeholder="Note (ex. vu près du phare, raté 3 fois)" aria-label="Note pour '+esc(disp(r.k, r.x.n))+'"></div>'+
+        '<button type="button" class="btn ghost" data-got="'+esc(key)+'">Attrapé</button>'+starBtn(r.k, r.x.n)+'</li>';
+    };
+    var h = '<div class="tools"><input type="search" id="tq" placeholder="Chercher dans ce qui reste" value="'+esc(tq)+'" aria-label="Chercher dans ce qui reste">'+
+      '<label class="chk" for="tlvl"><input type="checkbox" id="tlvl"'+(tlvl?' checked':'')+'>À mon niveau de passion</label>'+
+      '<label class="chk" for="tnow"><input type="checkbox" id="tnow"'+(tnow?' checked':'')+'>Possibles avec l\'heure et la météo de « Où aller »</label></div>';
+    var shown = pins.length; groups.forEach(function(g){ shown += g.rows.length; });
+    h += '<p class="note"><strong>'+shown+'</strong> à chasser'+(left!==shown ? ' sur '+left+' non attrapés' : '')+'.'+
+      (hiddenLvl ? ' '+hiddenLvl+' masqué'+(hiddenLvl>1?'s':'')+' car au-dessus de ton niveau de passion.' : '')+
+      (hiddenCond ? ' '+hiddenCond+' masqué'+(hiddenCond>1?'s':'')+' par l\'heure ou la météo.' : '')+'</p>';
+    if(!shown){
+      h += '<div class="empty">'+(left ? 'Rien ne correspond à ces filtres.' : 'Tout est attrapé. Bravo !')+'</div>';
     }
-    groups.forEach(function(g){
-      h += '<div class="jday"><div class="label">'+esc(LISTS[g.k].label)+'</div><ul class="list">';
-      g.rows.forEach(function(r){
-        var key = r.k+"|"+r.x.n;
-        h += '<li><div style="flex:1;min-width:0"><span class="pname">'+esc(disp(r.k, r.x.n))+'</span>'+(r.c==="maybe" ? ' <span class="tag soon">à vérifier</span>' : '')+detail(r.k, r.x)+
-             '<input type="text" class="rin" style="width:100%;margin-top:6px" data-note="'+esc(key)+'" value="'+esc(state.cible[key]||"")+'" maxlength="200" placeholder="Note (ex. vu près du phare, raté 3 fois)" aria-label="Note pour '+esc(disp(r.k, r.x.n))+'"></div>'+
-             '<button type="button" class="btn ghost" data-got="'+esc(key)+'">Attrapé</button>'+starBtn(r.k, r.x.n)+'</li>';
-      });
-      h += '</ul></div>';
+    if(pins.length){
+      h += '<details class="zone" data-z="__pins"'+(open ? (open.__pins?' open':'') : ' open')+'><summary><span class="t">★ Mes priorités</span><span class="gcount">'+pins.length+'</span></summary><ul class="list">'+pins.map(function(r){ return row(r, true); }).join("")+'</ul></details>';
+    }
+    groups.forEach(function(g, i){
+      var isOpen = open ? !!open[g.k] : (!pins.length && i===0);
+      h += '<details class="zone" data-z="'+g.k+'"'+(isOpen?' open':'')+'><summary><span class="t">'+esc(LISTS[g.k].label)+'</span><span class="gcount">'+g.rows.length+'</span></summary><ul class="list">'+g.rows.map(function(r){ return row(r, false); }).join("")+'</ul></details>';
     });
-    if(done || hidden) h += '<p class="note">'+(done ? done+' cible'+(done>1?'s':'')+' déjà attrapée'+(done>1?'s':'')+'.' : '')+(hidden ? ' '+hidden+' masquée'+(hidden>1?'s':'')+' par l\'heure ou la météo.' : '')+'</p>';
     el.innerHTML = h;
   }
 
@@ -595,7 +617,7 @@
     h += '<p class="note">'+esc(L.note)+(SPECIES.indexOf(tab)>=0?' Une heure ou une météo absente veut dire que le guide ne la précise pas : les filtres heure et météo gardent ces entrées.':'')+(L.src?' Sources : '+L.src.map(function(s){ return '<a href="'+s.u+'" target="_blank" rel="noopener">'+esc(s.t)+'</a>'; }).join(', ')+'.':'')+'</p>';
     if(items.length){
       h += '<div class="tools"><input type="search" id="q" placeholder="Chercher dans '+esc(L.label.toLowerCase())+'" value="'+esc(q)+'" aria-label="Chercher">'+
-           '<label class="chk" for="miss"><input type="checkbox" id="miss"'+(onlyMissing?' checked':'')+'>Seulement ce qui me manque</label>'+'<label class="chk" for="tgt"><input type="checkbox" id="tgt"'+(onlyTarget?' checked':'')+'>Seulement mes cibles ★</label>'+
+           '<label class="chk" for="miss"><input type="checkbox" id="miss"'+(onlyMissing?' checked':'')+'>Seulement ce qui me manque</label>'+'<label class="chk" for="tgt"><input type="checkbox" id="tgt"'+(onlyTarget?' checked':'')+'>Seulement mes priorités ★</label>'+
            (hasL?'<label class="chk" for="lvl"><input type="checkbox" id="lvl"'+(onlyLevel?' checked':'')+'>À mon niveau de passion ('+state.levels[LVKEY[tab]]+')</label>':'')+sel("so",so,"Ordre du guide",sortOpts)+(isSp ? sel("fl",fl,"Tous les lieux",zoneOpts) : '')+'</div><div class="tools">'+(isSp ? '<span class="label">Heure</span>'+tg("fh",HF,fh)+'<span class="label">Météo</span>'+tg("fw",WF,fw) : '')+'<button type="button" class="btn ghost" data-reset>Réinitialiser les filtres</button></div>'+(tab==="cuisine" ? '<div id="shop">'+shopping(items)+'</div>' : '');
     }
     h += '<div id="groups">';
@@ -733,6 +755,7 @@
     if(t.id==="so"){ so = t.value; renderColl(); return; }
     if(t.id==="tgt"){ onlyTarget = t.checked; applyFilter(); return; }
     if(t.id==="tnow"){ tnow = t.checked; renderTargets(); return; }
+    if(t.id==="tlvl"){ tlvl = t.checked; renderTargets(); return; }
     if(t.hasAttribute("data-note")){ queueSave(); return; }
     if(t.id==="miss"){ onlyMissing = t.checked; applyFilter(); return; }
     if(t.id==="lvl"){ onlyLevel = t.checked; applyFilter(); return; }
@@ -765,8 +788,9 @@
   });
   app.addEventListener("input", function(e){
     if(e.target.id==="q"){ q = e.target.value; applyFilter(); }
+    if(e.target.id==="tq"){ tq = e.target.value; var pos = e.target.selectionStart; renderTargets(); var nb = document.getElementById("tq"); if(nb){ nb.focus(); try{ nb.setSelectionRange(pos, pos); }catch(_){} } return; }
     if(e.target.id==="codes"){ state.codes = e.target.value; queueSave(); }
-    if(e.target.hasAttribute("data-note")){ state.cible[e.target.getAttribute("data-note")] = e.target.value; queueSave(); }
+    if(e.target.hasAttribute("data-note")){ var nk2 = e.target.getAttribute("data-note"); if(e.target.value) state.notes[nk2] = e.target.value; else delete state.notes[nk2]; queueSave(); }
   });
   app.addEventListener("submit", function(e){
     var rf = e.target.getAttribute("data-ren");
