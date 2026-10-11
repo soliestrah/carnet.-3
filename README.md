@@ -39,7 +39,7 @@ Les noms qui commencent par `=`, `+`, `-` ou `@` sont préfixés d'une apostroph
 
 ## Où aller maintenant ? et À chasser
 
-- **Où aller** : choisis une heure et/ou une météo, les zones sont classées par nombre d'insectes et d'oiseaux manquants à ton niveau de passion. Les entrées dont le guide ne précise pas l'heure ou la météo sont marquées « à vérifier ».
+- **Où aller** : choisis une heure et/ou une météo, les zones sont classées par nombre d'insectes et d'oiseaux manquants à ton niveau de passion. Les entrées dont le guide ne précise pas l'heure ou la météo sont marquées « à vérifier ». Les poissons y sont comptés eux aussi, avec un sélecteur « Heure du serveur » (aube 00–06 h, matin 06–12 h, après-midi 12–18 h, soir et nuit 18–24 h). Un poisson sans horaire noté est compté toute la journée.
 - **À chasser** : la liste se remplit toute seule avec tout ce que tu n'as pas encore attrapé (insectes, poissons, oiseaux), rien à étoiler. Elle se vide à mesure que tu coches dans Collections ou que tu appuies sur « Attrapé ». Filtres : recherche, « À mon niveau de passion » (activé par défaut) et « Possibles avec l'heure et la météo » de Où aller. L'étoile ☆ est facultative : elle épingle une entrée dans « ★ Mes priorités », en haut. Chaque entrée peut avoir une note libre, épinglée ou non. Priorités et notes sont dans l'export CSV (lignes `cible` pour les priorités, `note` pour les notes des entrées non épinglées).
 
 ## Renommer une entrée

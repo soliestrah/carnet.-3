@@ -90,7 +90,7 @@ PD.ING = {
     {id:"past_egg",  fr:"Œuf pasteurisé", en:"Pasteurized Egg", cat:"ferme", p:null, buy:100},
     {id:"bean_paste",fr:"Pâte de haricots", en:"Bean Paste",  cat:"ferme", p:null},
     /* Mer */
-    {id:"fish",      fr:"Poisson (n'importe lequel)",     en:"Any fish",      cat:"mer", p:null},
+    {id:"fish",      fr:"Poisson (n'importe lequel, médiane ~155 G à 1★)",     en:"Any fish",      cat:"mer", p:155},
     {id:"shellfish", fr:"Crustacé ou coquillage (n'importe lequel)", en:"Shellfish / King Crab", cat:"mer", p:null},
     {id:"goldcrab",  fr:"Crabe royal doré", en:"Golden King Crab", cat:"mer", p:null},
     /* Sucres, café, thé */

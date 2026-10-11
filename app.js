@@ -51,7 +51,7 @@
   migrate();
 
   var tab = "insectes", q = "", onlyMissing = false, onlyLevel = false, fh = [], fw = [], fl = "", so = "", jf = "all", jmax = 40, ioMsg = "", editing = null;
-  var wt = "", ww = "", onlyTarget = false, tnow = false, tlvl = true, tq = "";
+  var wt = "", ww = "", wh = "", onlyTarget = false, tnow = false, tlvl = true, tq = "";
   var dbDoc = null, timer = null;
   var app = document.getElementById("app");
   var saveEl = document.getElementById("save-state");
@@ -470,10 +470,24 @@
     });
   }
   /* « ok » = possible avec l'heure et la météo choisies, « maybe » = le guide ne le précise pas. */
+  /* Heure du serveur (poissons) : quatre plages de 6 h. */
+  var SERVER = [["dawn","🌅 Aube · 00–06 h",0],["morning","☀️ Matin · 06–12 h",6],["afternoon","🌤️ Après-midi · 12–18 h",12],["night","🌙 Soir et nuit · 18–24 h",18]];
+  function clockOf(p){
+    var m = p.extra.filter(function(s){ return /^\d\d:\d\d–\d\d:\d\d$/.test(s); })[0];
+    return m || "";
+  }
+  /* Pas d'horaire noté = toute la journée. */
+  function fishOk(p, key){
+    var c = clockOf(p); if(!c) return true;
+    var s = +c.slice(0,2), e = +c.slice(6,8), b = 0;
+    SERVER.forEach(function(t){ if(t[0]===key) b = t[2]; });
+    return s<e ? (b>=s && b<e) : (b>=s || b<e);
+  }
   function tcond(k, x){
-    if(k!=="insectes" && k!=="oiseaux") return "ok";
+    if(k!=="insectes" && k!=="oiseaux" && k!=="poissons") return "ok";
     var p = parse(k, x), u = false;
-    if(wt){ if(!p.h.length) u = true; else if(p.h.indexOf(wt)<0) return "no"; }
+    if(k==="poissons"){ if(wh && !fishOk(p, wh)) return "no"; }
+    else if(wt){ if(!p.h.length) u = true; else if(p.h.indexOf(wt)<0) return "no"; }
     if(ww){ if(!p.w.length) u = true; else if(p.w.indexOf(ww)<0) return "no"; }
     return u ? "maybe" : "ok";
   }
@@ -532,6 +546,7 @@
   ];
   function zoneOf(k, x, p){
     if(k==="insectes") return gfr(x.g);
+    if(k==="poissons") return "Pêche · "+gfr(x.g);
     var l = (p.lieu||"").split(", ")[0];
     if(!l) return "Lieu pas encore connu";
     for(var i=0;i<ZONES.length;i++) if(ZONES[i][0].test(l)) return ZONES[i][1];
@@ -540,14 +555,15 @@
   var ZSKIP = /vénement|pas encore|ollaboration|attractifs|givre/;
   function whereData(){
     var zs = {}, order = [];
-    ["insectes","oiseaux"].forEach(function(k){
+    ["insectes","oiseaux","poissons"].forEach(function(k){
       var lv = state.levels[k] || 99;
       allItems(k).forEach(function(x){
         if(x.c || state.seen[k][x.n] || (x.l && x.l > lv)) return;
         var p = parse(k, x), z = zoneOf(k, x, p);
         if(ZSKIP.test(z)) return;
         var unsure = false;
-        if(wt){ if(!p.h.length) unsure = true; else if(p.h.indexOf(wt)<0) return; }
+        if(k==="poissons"){ if(wh && !fishOk(p, wh)) return; }
+        else if(wt){ if(!p.h.length) unsure = true; else if(p.h.indexOf(wt)<0) return; }
         if(ww){ if(!p.w.length) unsure = true; else if(p.w.indexOf(ww)<0) return; }
         if(!zs[z]){ zs[z] = {z:z, ok:[], maybe:[]}; order.push(zs[z]); }
         (unsure ? zs[z].maybe : zs[z].ok).push({k:k, x:x, p:p});
@@ -561,19 +577,20 @@
     if(prev.length){ open = {}; Array.prototype.forEach.call(prev, function(d){ if(d.open) open[d.getAttribute("data-z")] = 1; }); }
     var data = whereData();
     var h = '<div class="tools"><span class="label">Heure</span>'+Object.keys(HF).map(function(k){ return '<button type="button" class="tab" data-wt="'+k+'" aria-pressed="'+(wt===k)+'">'+HF[k][1]+'</button>'; }).join("")+'</div>'+
+            '<div class="tools"><span class="label">Heure du serveur (poissons)</span>'+SERVER.map(function(t){ return '<button type="button" class="tab" data-wh="'+t[0]+'" aria-pressed="'+(wh===t[0])+'">'+t[1]+'</button>'; }).join("")+'</div>'+
             '<div class="tools"><span class="label">Météo</span>'+Object.keys(WF).map(function(k){ return '<button type="button" class="tab" data-ww="'+k+'" aria-pressed="'+(ww===k)+'">'+WF[k][1]+'</button>'; }).join("")+'</div>';
-    h += '<p class="note">Seuls les insectes et oiseaux de ton niveau de passion et pas encore cochés sont comptés. Les poissons n\'ont pas d\'heure ni de météo dans les données. Une entrée dont l\'heure ou la météo n\'est pas précisée par le guide passe dans « à vérifier ».</p>';
+    h += '<p class="note">Seuls les insectes, oiseaux et poissons pas encore cochés sont comptés (insectes et oiseaux à ton niveau de passion). « Heure » vaut pour les insectes et oiseaux, « Heure du serveur » pour les poissons : un poisson sans horaire noté est compté toute la journée. Les poissons d\'événements ne sont pas classés. Une entrée dont l\'heure ou la météo n\'est pas précisée par le guide passe dans « à vérifier ».</p>';
     if(!data.length) h += '<div class="empty">Rien à chasser avec ces conditions : tout est coché, ou aucune espèce connue ne correspond.</div>';
     data.forEach(function(d, i){
       var isOpen = open ? !!open[d.z] : i===0;
       [d.ok, d.maybe].forEach(function(a){ a.sort(function(p, q){ return (isTarget(q.k,q.x.n)?1:0) - (isTarget(p.k,p.x.n)?1:0); }); });
       var cnt = function(a, k){ return a.filter(function(r){ return r.k===k; }).length; };
-      var all = d.ok.concat(d.maybe), ni = cnt(all,"insectes"), no = cnt(all,"oiseaux");
-      var sub = [ni ? ni+" insecte"+(ni>1?"s":"") : "", no ? no+" oiseau"+(no>1?"x":"") : ""].filter(Boolean).join(" · ");
+      var all = d.ok.concat(d.maybe), ni = cnt(all,"insectes"), no = cnt(all,"oiseaux"), nf = cnt(all,"poissons");
+      var sub = [ni ? ni+" insecte"+(ni>1?"s":"") : "", no ? no+" oiseau"+(no>1?"x":"") : "", nf ? nf+" poisson"+(nf>1?"s":"") : ""].filter(Boolean).join(" · ");
       h += '<details class="zone" data-z="'+esc(d.z)+'"'+(isOpen?' open':'')+'><summary><span class="t">'+esc(d.z)+'</span><span class="gcount">'+sub+(d.maybe.length ? ' (dont '+d.maybe.length+' à vérifier)' : '')+'</span></summary><ul class="list">';
       all.forEach(function(r, j){
         var maybe = j>=d.ok.length;
-        var det = [r.p.lieu].concat(r.p.h.length ? [names(r.p.h, HF)] : [], r.p.w.length ? [names(r.p.w, WF)] : []).filter(Boolean).join(" · ");
+        var det = [r.p.lieu].concat(clockOf(r.p) ? [clockOf(r.p)] : [], r.p.h.length ? [names(r.p.h, HF)] : [], r.p.w.length ? [names(r.p.w, WF)] : []).filter(Boolean).join(" · ");
         h += '<li><span style="flex:1;min-width:0">'+esc(disp(r.k, r.x.n))+(det ? '<span class="hint">'+esc(det)+'</span>' : '')+'</span>'+
              starBtn(r.k, r.x.n)+(maybe ? '<span class="tag soon">à vérifier</span>' : '')+'<span class="tag">'+esc(LISTS[r.k].label)+'</span></li>';
       });
@@ -725,11 +742,12 @@
       if(state.seen[gl] && !state.seen[gl][gn]){ state.seen[gl][gn] = true; logAdd(gl, gn); }
       renderColl(); renderJournal(); queueSave(); return;
     }
-    var wb = e.target.closest("[data-wt],[data-ww]");
+    var wb = e.target.closest("[data-wt],[data-ww],[data-wh]");
     if(wb){
       if(wb.hasAttribute("data-wt")){ var vt = wb.getAttribute("data-wt"); wt = wt===vt ? "" : vt; }
+      else if(wb.hasAttribute("data-wh")){ var vh = wb.getAttribute("data-wh"); wh = wh===vh ? "" : vh; }
       else { var vw = wb.getAttribute("data-ww"); ww = ww===vw ? "" : vw; }
-      renderWhere(); return;
+      renderWhere(); renderTargets(); return;
     }
     var tgb = e.target.closest("[data-tg]");
     if(tgb){
