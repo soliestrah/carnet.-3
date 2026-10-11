@@ -6,8 +6,8 @@ var INFO = (function(){
   function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
   function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
 
-  var TIMES = [["dawn","Aube","🌅"],["day","Jour","🌤️"],["dusk","Crépuscule","🌇"],["night","Nuit","🌙"]];
-  var WEATHER = [["sunny","Ensoleillé","☀️"],["rainy","Pluie","🌧️"],["rainbow","Arc-en-ciel","🌈"]];
+  var TIMES = [["dawn","Aube",""],["day","Jour",""],["dusk","Crépuscule",""],["night","Nuit",""]];
+  var WEATHER = [["sunny","Ensoleillé",""],["rainy","Pluie",""],["rainbow","Arc-en-ciel",""]];
   var NOTIME = "Heure non précisée", NOWEATHER = "Météo non précisée";
   function tl(k){ for(var i=0;i<TIMES.length;i++) if(TIMES[i][0]===k) return TIMES[i]; }
   function wl(k){ for(var i=0;i<WEATHER.length;i++) if(WEATHER[i][0]===k) return WEATHER[i]; }
@@ -103,13 +103,13 @@ var INFO = (function(){
   function speciesView(tab, x){
     var p = parseSpecies(x), h = "", txt = [p.loc, p.locEn];
     var unknownLoc = !p.locEn || /not yet known|not confirmed/i.test(p.locEn);
-    h += row("Où", (p.loc ? chip(unknownLoc?"muted":"loc","📍",p.loc,p.locEn) : chip("muted","📍","Lieu non précisé")) +
-      p.extra.map(function(e){ return chip("loc","🎫",e); }).join(""));
+    h += row("Où", (p.loc ? chip(unknownLoc?"muted":"loc","",p.loc,p.locEn) : chip("muted","","Lieu non précisé")) +
+      p.extra.map(function(e){ return chip("loc","",e); }).join(""));
     if(tab==="insectes"){
-      h += row("Quand", p.times.length ? p.times.map(function(k){ var t=tl(k); txt.push(t[1]); return chip("time",t[2],t[1]); }).join("") : chip("muted","🕐",NOTIME));
+      h += row("Quand", p.times.length ? p.times.map(function(k){ var t=tl(k); txt.push(t[1]); return chip("time",t[2],t[1]); }).join("") : chip("muted","",NOTIME));
     }
     if(tab==="insectes" || tab==="oiseaux"){
-      h += row("Météo", p.weather.length ? p.weather.map(function(k){ var w=wl(k); txt.push(w[1]); return chip("wx",w[2],w[1]); }).join("") : chip("muted","🌥️",NOWEATHER));
+      h += row("Météo", p.weather.length ? p.weather.map(function(k){ var w=wl(k); txt.push(w[1]); return chip("wx",w[2],w[1]); }).join("") : chip("muted","",NOWEATHER));
     }
     return {html:'<span class="info">'+h+'</span>', t:p.times.join(" "), w:p.weather.join(" "), can:true, txt:txt.concat(p.extra).join(" ")};
   }
@@ -175,7 +175,7 @@ var INFO = (function(){
       if(rec){
         var ok = c.done(rec);
         txt.push(rec);
-        return chip("rec"+(ok?" ok":""),"🍽",(n?n+" × ":"")+c.disp(rec)+(ok?" ✓":""),"Une autre recette à avoir préparée");
+        return chip("rec"+(ok?" ok":""),"",(n?n+" × ":"")+c.disp(rec)+(ok?" ✓":""),"Une autre recette à avoir préparée");
       }
       var fr = frIng(name, n || (/s$/i.test(name)?2:1));
       txt.push(fr, name);
@@ -183,14 +183,14 @@ var INFO = (function(){
     });
     h += row("Il te faut", ing.length ? ing.join("") : chip("muted","","Ingrédients non listés dans mes sources"));
     var rc = "";
-    if(r.lvl) rc += chip("lvl","🎓","Passion Cuisine niv. "+r.lvl);
+    if(r.lvl) rc += chip("lvl","","Passion Cuisine niv. "+r.lvl);
     if(u.pre){
       var done = c.done(u.pre);
-      rc += chip(done?"ok":"todo","📖",u.txt+" : "+c.disp(u.pre)+(done?" ✓":""));
+      rc += chip(done?"ok":"todo","",u.txt+" : "+c.disp(u.pre)+(done?" ✓":""));
       txt.push(u.pre);
-    } else rc += chip("loc","📖",u.txt);
+    } else rc += chip("loc","",u.txt);
     var can = (!r.lvl || r.lvl<=c.lvl) && (!u.pre || c.done(u.pre));
-    if(can && !c.done(x.n)) rc += chip("ok","✅","Prête à débloquer");
+    if(can && !c.done(x.n)) rc += chip("ok","","Prête à débloquer");
     h += row("Où la trouver", rc);
     txt.push(u.txt);
     return {html:'<span class="info">'+h+'</span>', t:"", w:"", can:can, txt:txt.join(" ")};
@@ -206,8 +206,8 @@ var INFO = (function(){
   };
   function modes(tab){ return MODES[tab] || MODES.cultures; }
 
-  var TIMELBL = TIMES.map(function(t){ return t[2]+" "+t[1]; }).concat(["🕐 "+NOTIME]);
-  var WXLBL = WEATHER.map(function(w){ return w[2]+" "+w[1]; }).concat(["🌥️ "+NOWEATHER]);
+  var TIMELBL = TIMES.map(function(t){ return t[1]; }).concat([NOTIME]);
+  var WXLBL = WEATHER.map(function(w){ return w[1]; }).concat([NOWEATHER]);
 
   function groupsFor(tab, x, mode, c){
     if(x.c) return ["Ajoutés par toi"];
@@ -219,8 +219,8 @@ var INFO = (function(){
       return [trGroup(x.g)];
     }
     var p = parseSpecies(x);
-    if(mode==="time") return p.times.length ? p.times.map(function(k){ var t=tl(k); return t[2]+" "+t[1]; }) : ["🕐 "+NOTIME];
-    if(mode==="weather") return p.weather.length ? p.weather.map(function(k){ var w=wl(k); return w[2]+" "+w[1]; }) : ["🌥️ "+NOWEATHER];
+    if(mode==="time") return p.times.length ? p.times.map(function(k){ var t=tl(k); return t[1]; }) : [NOTIME];
+    if(mode==="weather") return p.weather.length ? p.weather.map(function(k){ var w=wl(k); return w[1]; }) : [NOWEATHER];
     if(mode==="spot") return [p.loc ? p.loc.split(", ")[0] : "Lieu non précisé"];
     if(mode==="loc") return [regionOf(p.locEn)];
     return [trGroup(x.g)];

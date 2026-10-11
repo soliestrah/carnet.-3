@@ -51,10 +51,10 @@
   migrate();
 
   var tab = "insectes", q = "", onlyMissing = false, onlyLevel = false, fh = [], fw = [], fl = "", so = "", jf = "all", jmax = 40, ioMsg = "", editing = null;
-  var wt = "", ww = "", wh = "", onlyTarget = false, tnow = false, tlvl = true, tq = "";
+  var wt = "", ww = "", onlyTarget = false, tnow = false, tlvl = true, tq = "";
   var COND_KEY = "carnet-heartopia-cond";
-  try{ var cj = JSON.parse(localStorage.getItem(COND_KEY) || "{}"); wt = cj.wt || ""; ww = cj.ww || ""; wh = cj.wh || ""; }catch(e){}
-  function saveCond(){ try{ localStorage.setItem(COND_KEY, JSON.stringify({wt:wt, ww:ww, wh:wh})); }catch(e){} }
+  try{ var cj = JSON.parse(localStorage.getItem(COND_KEY) || "{}"); wt = cj.wt || ""; ww = cj.ww || ""; }catch(e){}
+  function saveCond(){ try{ localStorage.setItem(COND_KEY, JSON.stringify({wt:wt, ww:ww})); }catch(e){} }
   var dbDoc = null, timer = null;
   var app = document.getElementById("app");
   var PAGE = document.body.getAttribute("data-page") || "home";
@@ -419,7 +419,7 @@
     if(k==="cuisine"){
       if(p.niv) c.push('<span class="ch lv">Cuisine '+p.niv.replace("Niv. ","niv. ")+'</span>');
       p.ing.forEach(function(s){ c.push('<span class="ch ing">'+esc(s)+'</span>'); });
-      return (c.length ? '<span class="info">'+c.join("")+'</span>' : '')+(p.src ? '<span class="hint">🔓 '+esc(p.src)+'</span>' : '');
+      return (c.length ? '<span class="info">'+c.join("")+'</span>' : '')+(p.src ? '<span class="hint">'+esc(p.src)+'</span>' : '');
     }
     if(k==="cultures"){
       var q = (x.m||"").split(" · ");
@@ -429,10 +429,10 @@
     var clock = p.extra.filter(function(s){ return /^\d\d:\d\d–\d\d:\d\d$/.test(s); });
     var ex = p.extra.filter(function(s){ return clock.indexOf(s)<0; });
     var lieu = [p.lieu].concat(ex).filter(Boolean).join(" · ");
-    c.push('<span class="ch pl">📍 '+(lieu ? esc(lieu) : "Lieu inconnu")+'</span>');
-    if(p.h.length) c.push('<span class="ch">🕐 '+names(p.h, HF)+'</span>');
-    if(clock.length) c.push('<span class="ch" title="Heures du serveur">🕐 '+esc(clock.join(" · "))+'</span>');
-    if(p.w.length) c.push('<span class="ch">🌦 '+names(p.w, WF)+'</span>');
+    c.push('<span class="ch pl">'+(lieu ? esc(lieu) : "Lieu inconnu")+'</span>');
+    if(p.h.length) c.push('<span class="ch">'+names(p.h, HF)+'</span>');
+    if(clock.length) c.push('<span class="ch" title="Heures du serveur">'+esc(clock.join(" · "))+'</span>');
+    if(p.w.length) c.push('<span class="ch">'+names(p.w, WF)+'</span>');
     return '<span class="info">'+c.join("")+'</span>';
   }
   /* Somme des ingrédients des recettes manquantes à mon niveau de cuisine. */
@@ -475,8 +475,9 @@
     });
   }
   /* « ok » = possible avec l'heure et la météo choisies, « maybe » = le guide ne le précise pas. */
-  /* Heure du serveur (poissons) : quatre plages de 6 h. */
-  var SERVER = [["dawn","🌅 Aube · 00–06 h",0],["morning","☀️ Matin · 06–12 h",6],["afternoon","🌤️ Après-midi · 12–18 h",12],["night","🌙 Soir et nuit · 18–24 h",18]];
+  /* Horaires des poissons (heure du serveur, plages de 6 h) déduits du filtre « Heure » :
+     aube 00–06 h, journée 06–18 h, crépuscule 18–24 h, nuit 18–06 h. */
+  var FISHSLOTS = {Dawn:[0], Day:[6,12], Dusk:[18], Night:[18,0]};
   function clockOf(p){
     var m = p.extra.filter(function(s){ return /^\d\d:\d\d–\d\d:\d\d$/.test(s); })[0];
     return m || "";
@@ -484,14 +485,13 @@
   /* Pas d'horaire noté = toute la journée. */
   function fishOk(p, key){
     var c = clockOf(p); if(!c) return true;
-    var s = +c.slice(0,2), e = +c.slice(6,8), b = 0;
-    SERVER.forEach(function(t){ if(t[0]===key) b = t[2]; });
-    return s<e ? (b>=s && b<e) : (b>=s || b<e);
+    var s = +c.slice(0,2), e = +c.slice(6,8);
+    return (FISHSLOTS[key]||[]).some(function(b){ return s<e ? (b>=s && b<e) : (b>=s || b<e); });
   }
   function tcond(k, x){
     if(k!=="insectes" && k!=="oiseaux" && k!=="poissons") return "ok";
     var p = parse(k, x), u = false;
-    if(k==="poissons"){ if(wh && !fishOk(p, wh)) return "no"; }
+    if(k==="poissons"){ if(wt && !fishOk(p, wt)) return "no"; }
     else if(wt){ if(!p.h.length) u = true; else if(p.h.indexOf(wt)<0) return "no"; }
     if(ww){ if(!p.w.length) u = true; else if(p.w.indexOf(ww)<0) return "no"; }
     return u ? "maybe" : "ok";
@@ -568,7 +568,7 @@
         var p = parse(k, x), z = zoneOf(k, x, p);
         if(ZSKIP.test(z)) return;
         var unsure = false;
-        if(k==="poissons"){ if(wh && !fishOk(p, wh)) return; }
+        if(k==="poissons"){ if(wt && !fishOk(p, wt)) return; }
         else if(wt){ if(!p.h.length) unsure = true; else if(p.h.indexOf(wt)<0) return; }
         if(ww){ if(!p.w.length) unsure = true; else if(p.w.indexOf(ww)<0) return; }
         if(!zs[z]){ zs[z] = {z:z, ok:[], maybe:[]}; order.push(zs[z]); }
@@ -579,7 +579,6 @@
   }
   function condTools(){
     return '<div class="tools"><span class="label">Heure</span>'+Object.keys(HF).map(function(k){ return '<button type="button" class="tab" data-wt="'+k+'" aria-pressed="'+(wt===k)+'">'+HF[k][1]+'</button>'; }).join("")+'</div>'+
-            '<div class="tools"><span class="label">Heure du serveur (poissons)</span>'+SERVER.map(function(t){ return '<button type="button" class="tab" data-wh="'+t[0]+'" aria-pressed="'+(wh===t[0])+'">'+t[1]+'</button>'; }).join("")+'</div>'+
             '<div class="tools"><span class="label">Météo</span>'+Object.keys(WF).map(function(k){ return '<button type="button" class="tab" data-ww="'+k+'" aria-pressed="'+(ww===k)+'">'+WF[k][1]+'</button>'; }).join("")+'</div>';
   }
   function renderWhere(){
@@ -749,10 +748,9 @@
       if(state.seen[gl] && !state.seen[gl][gn]){ state.seen[gl][gn] = true; logAdd(gl, gn); }
       renderColl(); renderJournal(); queueSave(); return;
     }
-    var wb = e.target.closest("[data-wt],[data-ww],[data-wh]");
+    var wb = e.target.closest("[data-wt],[data-ww]");
     if(wb){
       if(wb.hasAttribute("data-wt")){ var vt = wb.getAttribute("data-wt"); wt = wt===vt ? "" : vt; }
-      else if(wb.hasAttribute("data-wh")){ var vh = wb.getAttribute("data-wh"); wh = wh===vh ? "" : vh; }
       else { var vw = wb.getAttribute("data-ww"); ww = ww===vw ? "" : vw; }
       saveCond(); renderWhere(); renderTargets(); return;
     }

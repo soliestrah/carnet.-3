@@ -61,7 +61,7 @@
       h += '<div class="rp-wrap"><table class="rp"><thead><tr>'+th("n","Nom")+th("c","Type")+th("lv","Niv.","num")+th("w","Où / ingrédients")+th("t","Heure et météo")+th("p","Prix "+S.star+"★","num")+th("gph","Or/h","num")+'</tr></thead><tbody>';
       h += all.map(function(r){
         var p = price(r), g = gph(r);
-        return '<tr><td class="rp-n">'+esc(r.n)+(r.dv?' <span class="rp-flag" title="Les guides ne donnent pas le même temps de pousse : vérifie en jeu">⚠</span>':'')+'</td>'+
+        return '<tr><td class="rp-n">'+esc(r.n)+(r.dv?' <span class="rp-flag" title="Les guides ne donnent pas le même temps de pousse : vérifie en jeu">!</span>':'')+'</td>'+
           '<td>'+(CATNAME[r.c]||"")+(r.g?' <span class="rp-sub">'+esc(r.g)+'</span>':'')+'</td>'+
           '<td class="num">'+(r.lv!=null?r.lv:"")+'</td>'+
           '<td>'+esc(r.w||"")+'</td>'+
@@ -70,7 +70,7 @@
           '<td class="num">'+(g!=null?fmt(Math.round(g))+' G':'')+'</td></tr>';
       }).join("")+'</tbody></table></div>';
     }
-    h += '<p class="note">Or/h = prix d\'une récolte divisé par le temps de pousse (le nombre de fruits par récolte n\'est pas publié). ⚠ = temps de pousse différent selon les guides. Les prix 2★ à 5★ absents d\'un guide restent vides. Les insectes et oiseaux n\'ont pas de prix de vente publié.</p></section>';
+    h += '<p class="note">Or/h = prix d\'une récolte divisé par le temps de pousse (le nombre de fruits par récolte n\'est pas publié). « ! » = temps de pousse différent selon les guides. Les prix 2★ à 5★ absents d\'un guide restent vides. Les insectes et oiseaux n\'ont pas de prix de vente publié.</p></section>';
     var app = document.getElementById("app"), keep = document.activeElement && document.activeElement.id, pos = keep==="q" ? document.activeElement.selectionStart : 0;
     app.innerHTML = h;
     if(keep==="q"){ var el = document.getElementById("q"); el.focus(); try{ el.setSelectionRange(pos,pos); }catch(e){} }

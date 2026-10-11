@@ -62,7 +62,13 @@ section{scroll-margin-top:84px}
 
 /* ---- Mise en page ---- */
 .cols{display:grid;grid-template-columns:1fr;gap:34px}
-@media (min-width:860px){.cols{grid-template-columns:1fr 1fr;gap:40px}}
+@media (min-width:860px){
+  .cols{grid-template-columns:1fr 1fr;gap:40px;align-items:start}
+  /* Accueil : la routine à gauche, passions puis paliers empilés à droite (plus de colonne vide) */
+  .cols>#sec-routine{grid-column:1;grid-row:1 / span 2}
+  .cols>#sec-passions{grid-column:2;grid-row:1}
+  .cols>#sec-paliers{grid-column:2;grid-row:2}
+}
 section{min-width:0;display:flex;flex-direction:column;gap:12px}
 section.full{grid-column:1/-1}
 .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -276,7 +282,7 @@ table.rp tbody tr:hover td{background:var(--field)}
 table.rp .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 table.rp .rp-n{font-weight:800}
 .rp-sub{color:var(--muted);font-size:12px;font-weight:500}
-.rp-flag{color:var(--star)}
+.rp-flag{display:inline-grid;place-items:center;width:18px;height:18px;margin-left:6px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:12px;font-weight:800;line-height:1;vertical-align:1px;cursor:help}
 
 @media (max-width:520px){
   header{padding-top:28px;min-height:136px;background-size:120px 72px}
