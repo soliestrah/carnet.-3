@@ -217,7 +217,7 @@
   var doneMsg = "";
 
   /* Retire de l'inventaire les ingrédients consommés : uses = {idIngrédient: quantité}. */
-  function consume(uses, label){
+  function consume(uses, label, adds){
     var inv = S.inv[S.mode], before = {};
     Object.keys(inv).forEach(function(k){ before[k] = inv[k]; });
     undoSnap = {mode:S.mode, inv:before};
@@ -225,8 +225,23 @@
       var left = (inv[k]||0) - uses[k];
       if(left>0) inv[k] = left; else delete inv[k];
     });
+    /* Les plats obtenus rejoignent « Plats déjà cuisinés » (utile pour les plats composés). */
+    var added = 0;
+    Object.keys(adds||{}).forEach(function(k){ inv[k] = (inv[k]||0) + adds[k]; added += adds[k]; });
+    if(added) label += " "+added+" plat"+(added>1?"s":"")+" ajouté"+(added>1?"s":"")+" à « Plats déjà cuisinés ».";
     doneMsg = label;
     queueSave(); render();
+  }
+
+  /* Coche les recettes cuisinées dans Collections (carnet). Seulement si tu en as déjà coché, pour ne pas changer le filtre « cochées ». */
+  function markLearned(names){
+    try{
+      var o = JSON.parse(localStorage.getItem(MAINKEY)||"null");
+      if(!o || !o.seen || !o.seen.cuisine || !Object.keys(o.seen.cuisine).some(function(k){ return o.seen.cuisine[k]; })) return false;
+      names.forEach(function(n){ o.seen.cuisine[n] = true; });
+      localStorage.setItem(MAINKEY, JSON.stringify(o));
+      return true;
+    }catch(e){ return false; }
   }
 
   function groupOpen(cat, cx){
@@ -512,18 +527,29 @@
     }
     var ck = e.target.closest("[data-cook]");
     if(ck && lastRes){
-      var which = ck.getAttribute("data-cook"), uses = {}, label;
+      var which = ck.getAttribute("data-cook"), uses = {}, adds = {}, label;
+      var learnedNames = [];
+      function addOut(rid){
+        var r1 = recList(S.mode).filter(function(r){ return r.id===rid; })[0];
+        if(S.mode==="cuisine" && r1 && r1.c) learnedNames.push(r1.c);
+        if(S.mode==="cuisine" && r1 && r1.out) adds[r1.out] = (adds[r1.out]||0) + (lastRes.counts[rid]||1);
+      }
       if(which==="all"){
         Object.keys(lastRes.uses).forEach(function(rid){
           Object.keys(lastRes.uses[rid]).forEach(function(k){ uses[k] = (uses[k]||0) + lastRes.uses[rid][k]; });
+          addOut(rid);
         });
         label = "Inventaire mis à jour : tout le plan est retiré.";
       } else if(lastRes.uses[which]){
-        uses = lastRes.uses[which];
+        uses = lastRes.uses[which]; addOut(which);
         var r0 = recList(S.mode).filter(function(r){ return r.id===which; })[0];
         label = "Inventaire mis à jour : "+(lastRes.counts[which]||1)+" × "+(r0 ? r0.n : which)+" retiré"+((lastRes.counts[which]||1)>1?"s":"")+".";
       }
-      if(label) consume(uses, label);
+      if(label){
+        consume(uses, label, adds);
+        if(learnedNames.length && markLearned(learnedNames)) doneMsg += " Recette"+(learnedNames.length>1?"s":"")+" cochée"+(learnedNames.length>1?"s":"")+" dans Collections.";
+        if(learnedNames.length) render();
+      }
       return;
     }
     var m = e.target.closest("[data-mode]");

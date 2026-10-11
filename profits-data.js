@@ -61,7 +61,7 @@ PD.ING = {
     {id:"cocoa",     fr:"Cacao",          en:"Cocoa",      cat:"cultures", p:330, buy:110},
     {id:"avocado",   fr:"Avocat",         en:"Avocado",    cat:"cultures", p:540, buy:180},
     /* Ajoutés à la demande : prix inconnus (à saisir dans la page), recettes pas encore dans les données. */
-    {id:"pumpkin",   fr:"Citrouille",     en:"Pumpkin",    cat:"cultures", p:null},
+    {id:"pumpkin",   fr:"Citrouille",     en:"Pumpkin",    cat:"cultures", p:null, g:["veg"]},
     {id:"paddy",     fr:"Paddy (riz non décortiqué)", en:"Paddy", cat:"cultures", p:null},
     /* Fruits cueillis dans la nature */
     {id:"apple",     fr:"Pomme",          en:"Apple",      cat:"fruits", p:null, g:["fruit"]},

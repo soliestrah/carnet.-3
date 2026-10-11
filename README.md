@@ -54,14 +54,24 @@ Les guides traduisent les noms chacun à leur façon et ils ne correspondent pas
 - **Filtres** : seulement les recettes de ton niveau de cuisine et/ou cochées dans Collections (lus dans le carnet, jamais modifiés).
 - **Prix de revente** : modifiables ligne par ligne. Un prix laissé vide compte 0 (œufs, lait, poissons… dont le prix de revente n'est pas publié). Les plats composés (Picnic Set, Candlelight Dinner, Afternoon Tea) demandent des plats déjà cuisinés : ajoute-les à l'inventaire, section « Plats déjà cuisinés ».
 - **Meubles** : aucun guide ne donne de prix de revente fiable. Les 6 recettes confirmées sont préremplies, tu saisis leur prix, et tu peux ajouter tes propres meubles (« 5 Bois, 2 Pierre »).
-- **J'ai cuisiné** : le bouton « J'ai tout cuisiné » retire du sac tout ce que le plan consomme, et « Fait » sur une ligne ne retire que ce plat. Le plan est recalculé avec ce qu'il reste. « Annuler » remet l'inventaire d'avant (il disparaît si tu modifies une quantité à la main).
-- **Ingrédients sans recette** : citrouille, paddy, œuf pasteurisé, pâte de haricots et poudre de matcha sont dans l'inventaire, mais aucune recette ne les utilise encore dans `profits-data.js`.
+- **J'ai cuisiné** : le bouton « J'ai tout cuisiné » retire du sac tout ce que le plan consomme, et « Fait » sur une ligne ne retire que ce plat. Les plats obtenus sont ajoutés à « Plats déjà cuisinés » (« Annuler » les retire aussi). Si tu as déjà coché au moins une recette dans Collections, les recettes cuisinées y sont cochées aussi (« Annuler » ne les décoche pas). Le plan est recalculé avec ce qu'il reste. « Annuler » remet l'inventaire d'avant (il disparaît si tu modifies une quantité à la main).
+- **Ingrédients sans recette** : la citrouille compte comme légume (salade, bagel). Paddy, œuf pasteurisé, pâte de haricots et poudre de matcha sont dans l'inventaire, mais aucune recette ne les utilise encore dans `profits-data.js`.
 - Le calcul est glouton avec plusieurs essais (graine fixe, résultat stable). C'est une très bonne suggestion, pas une preuve d'optimum.
 - Réglages et inventaire enregistrés dans le navigateur sous la clé `carnet-heartopia-profits-v1` (pas dans l'export CSV).
 
 Fichiers : `profits.html` (page), `profits-data.js` (ingrédients, recettes, prix, à corriger ici), `profits.js` (calcul et affichage), styles à la fin de `style.css`.
 
 Sources des prix : [heartopia.live](https://www.heartopia.live/en/recipes/) (13/07/2026), [heartopia.life](https://heartopia.life/database/recipe-prices/) (28/07/2026), prix d'achat de [heartopia.life](https://heartopia.life/database/ingredients/). Le riz n'existe pas comme ingrédient de recette standard (seulement les zongzi d'événement), il n'est donc pas listé. Les variantes de tartes et de grillades par champignon ont le même prix et sont regroupées.
+
+## Page « Ce qui rapporte le plus »
+
+`rapporte.html`, accessible par « Ce qui rapporte → » dans la navigation. Un tableau des poissons, recettes, cultures, insectes et oiseaux, avec :
+- un sélecteur de qualité de 1★ à 5★ (le prix affiché change) ;
+- des filtres par catégorie, une recherche et l'option « masquer les événements » ;
+- un tri en cliquant sur les titres de colonnes (prix, niveau, nom, or par heure) ;
+- le lieu, l'heure et la météo pour les poissons, les ingrédients et le niveau pour les recettes.
+
+Limites : les insectes et les oiseaux n'ont pas de prix de vente publié par les guides (« à vérifier en jeu »). Pour les cultures, l'or par heure = prix d'une récolte divisé par le temps de pousse, et ⚠ signale les temps de pousse qui diffèrent d'un guide à l'autre. Les prix et les ingrédients sont dans `rapporte-data.js` (consultés le 11/10/2026 : heartopia.live, heartopia.life, selphie1999gaming.com).
 
 ## Modifier et améliorer
 
@@ -72,6 +82,7 @@ Sources des prix : [heartopia.live](https://www.heartopia.live/en/recipes/) (13/
 | `data.js` | Listes : routine, passions, paliers, espèces, recettes |
 | `app.js` | Logique : état, affichage, journal, CSV, navigation |
 | `profits.html`, `profits-data.js`, `profits.js` | Page Profits (voir plus haut) |
+| `rapporte.html`, `rapporte-data.js`, `rapporte.js` | Page « Ce qui rapporte le plus » |
 
 - **Corriger un nom ou ajouter une espèce** : édite `data.js`. Chaque entrée s'écrit `"Nom|Détail"`. Un détail qui commence par `Niv. 3` alimente le filtre « à mon niveau de passion ».
 - **Les ticks sont rattachés au nom** de l'espèce. Si tu renommes une entrée dans `data.js`, ajoute son ancien nom dans la fonction `migrate()` de `app.js` pour garder les cases déjà cochées.
@@ -84,7 +95,7 @@ Les noms sont ceux du jeu **en anglais**. Les listes viennent de guides de la co
 - Insectes (101) : [Heartopia.Life](https://heartopia.life/) pour la liste, [Selphie1999 Gaming](https://selphie1999gaming.com/) pour les lieux, heures et météo
 - Poissons (124) : [Heartopia.Life](https://heartopia.life/) pour la liste et les lieux, [KeenGamer](https://www.keengamer.com/) pour la météo et les horaires (heures du serveur, 83 poissons)
 - Cultures (13 plantes, 13 fleurs) : [KeenGamer](https://www.keengamer.com/)
-- Oiseaux (66, il en existe davantage) : [KeenGamer](https://www.keengamer.com/) et autres guides
+- Oiseaux (66, il en existe davantage ; heure et météo de KeenGamer) : [KeenGamer](https://www.keengamer.com/) et autres guides
 - Recettes (58) : [KeenGamer](https://www.keengamer.com/) et [Pocket Tactics](https://www.pockettactics.com/)
 - Inventaire et paliers : guides [Selphie1999 Gaming](https://selphie1999gaming.com/game-guides/heartopia/heartopia-how-to-expand-your-storage/) et [Space4Games](https://space4games.com/en/games-en/heartopia-inventory-expand-your-backpack/)
 
