@@ -15,6 +15,19 @@ C'est une page statique, sans serveur ni compte. Tout est enregistré dans le na
 
 Les données restent dans le navigateur de l'appareil. Une autre adresse ou un autre appareil repart de zéro : utilise la sauvegarde CSV pour les déplacer.
 
+## Les pages
+
+| Page | Contenu |
+|---|---|
+| `index.html` | Accueil : niveaux, routine du jour, passions, paliers, où aller maintenant |
+| `collections.html` | Insectes, poissons, oiseaux, recettes, cultures |
+| `chasser.html` | Ce qu'il te reste à attraper, avec étoiles et notes |
+| `journal.html` | Historique jour par jour et sauvegarde CSV |
+| `profits.html` | Que cuisiner pour gagner le plus |
+| `rapporte.html` | Ce qui rapporte le plus à la vente |
+
+Les pages partagent les mêmes données dans le navigateur. L'heure, le serveur et la météo choisis pour « Où aller » sont aussi repris sur « À chasser ».
+
 ## Sauvegarde CSV
 
 La section « Sauvegarde CSV » en bas de page propose :

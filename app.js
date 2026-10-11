@@ -52,8 +52,12 @@
 
   var tab = "insectes", q = "", onlyMissing = false, onlyLevel = false, fh = [], fw = [], fl = "", so = "", jf = "all", jmax = 40, ioMsg = "", editing = null;
   var wt = "", ww = "", wh = "", onlyTarget = false, tnow = false, tlvl = true, tq = "";
+  var COND_KEY = "carnet-heartopia-cond";
+  try{ var cj = JSON.parse(localStorage.getItem(COND_KEY) || "{}"); wt = cj.wt || ""; ww = cj.ww || ""; wh = cj.wh || ""; }catch(e){}
+  function saveCond(){ try{ localStorage.setItem(COND_KEY, JSON.stringify({wt:wt, ww:ww, wh:wh})); }catch(e){} }
   var dbDoc = null, timer = null;
   var app = document.getElementById("app");
+  var PAGE = document.body.getAttribute("data-page") || "home";
   var saveEl = document.getElementById("save-state");
 
   function rollDaily(){
@@ -257,7 +261,7 @@
     setIo("Import terminé : "+added+" coché"+(added>1?"s":"")+" ajouté"+(added>1?"s":"")+", "+settings+" réglage"+(settings>1?"s":"")+" repris"+(skipped?", "+skipped+" ligne"+(skipped>1?"s":"")+" ignorée"+(skipped>1?"s":""):"")+".");
   }
   function backupHtml(){
-    return '<div class="backup"><div><h3>Sauvegarde CSV</h3><p class="sub">Exporte tout ton carnet dans un fichier, puis réimporte-le quand tu veux : après un nettoyage du navigateur, sur un autre appareil ou dans la version GitHub. L\'import s\'ajoute à ce que tu as déjà.</p></div>'+
+    return '<div class="backup"><div><h3>Sauvegarde CSV</h3></div>'+
       '<div class="row"><button type="button" class="btn" data-export>Exporter en CSV</button><button type="button" class="btn ghost" data-copy>Copier le CSV</button></div>'+
       '<div class="row"><label for="io-file" class="chk">Importer un CSV</label><input type="file" id="io-file" accept=".csv,text/csv,text/plain"></div>'+
       '<details><summary>Coller du texte CSV à la place</summary><textarea id="io-paste" aria-label="Texte CSV à importer" spellcheck="false"></textarea><button type="button" class="btn ghost" data-paste>Importer ce texte</button></details>'+
@@ -272,20 +276,20 @@
     var next = PALIERS.filter(function(p){return p.l>dg;})[0];
 
     var h = '';
-    h += '<div class="strip">'+
+    if(PAGE==="home") h += '<div class="strip">'+
       '<div><span class="label">Niveau de bâtisseur</span><div class="row"><span class="big">'+dg+'</span>'+stepper("dg","dg","")+'</div></div>'+
       '<div><span class="label">Aujourd\'hui</span><span class="big">'+doneN+'<small> / '+DAILY.length+'</small></span></div>'+
       '<div><span class="label">Espèces cochées</span><span class="big"><span id="sum-d">0</span><small> / <span id="sum-t">0</span></small></span></div>'+
       '<div><span class="label">Prochain palier</span><span class="big">'+(next?('Niv. '+next.l):'Tous passés')+'</span></div>'+
     '</div>';
 
-    h += '<div class="cols">';
+    if(PAGE==="home") h += '<div class="cols">';
 
-    h += '<section id="sec-routine"><div><h2>Routine du jour</h2><p class="sub">Se remet à zéro chaque matin.</p></div><ul class="list">'+
+    if(PAGE==="home") h += '<section id="sec-routine"><div><h2>Routine du jour</h2></div><ul class="list">'+
       DAILY.map(dailyItem).join("")+'</ul>'+
       '<label class="label" for="codes" style="margin-top:14px;display:block">Codes disponibles</label><textarea id="codes" class="codes" placeholder="Colle ici les codes à utiliser…">'+esc(state.codes||"")+'</textarea></section>';
 
-    h += '<section id="sec-passions"><div><h2>Passions</h2><p class="sub">Le chiffre jaune indique où dépenser tes tickets d\'amélioration en premier.</p></div><div>'+
+    if(PAGE==="home") h += '<section id="sec-passions"><div><h2>Passions</h2></div><div>'+
       PASSIONS.map(function(p){
         return '<div class="passion"><span class="rank'+(p.r>=4?' later':'')+'" title="Priorité '+p.r+'">'+p.r+'</span>'+
           '<div><div class="pname">'+p.n+'</div><span class="hint">Mentor : '+p.m+'. '+esc(p.h)+'</span></div>'+
@@ -295,7 +299,7 @@
         (dg>=12?'<span class="tag ok">Disponible</span>':'<span class="tag">Verrouillé</span>')+'</div>'+
     '</div></section>';
 
-    h += '<section id="sec-paliers"><div><h2>Paliers de bâtisseur</h2><p class="sub">Change ton niveau en haut de page pour mettre cette liste à jour.</p></div><ul class="list">'+
+    if(PAGE==="home") h += '<section id="sec-paliers"><div><h2>Paliers de bâtisseur</h2></div><ul class="list">'+
       PALIERS.map(function(p){
         var reached = dg>=p.l;
         var tag = reached ? '<span class="tag ok">Atteint</span>' : '<span class="tag soon">Dans '+(p.l-dg)+' niv.</span>';
@@ -303,18 +307,19 @@
         return '<li style="flex-direction:column;gap:2px"><div class="row" style="justify-content:space-between;width:100%"><strong>Niveau '+p.l+' · '+esc(p.t)+'</strong>'+tag+'</div><span class="hint">'+esc(p.h)+'</span>'+extra+'</li>';
       }).join("")+'</ul></section>';
 
-    h += '<section class="full" id="sec-cibles"><div><h2>À chasser</h2><p class="sub">Tout ce que tu n\'as pas encore attrapé (insectes, poissons, oiseaux), sans rien à étoiler. L\'étoile ☆ sert seulement à épingler quelques priorités en haut de la liste.</p></div><div id="targets"></div></section>';
+    if(PAGE==="chasser") h += '<section class="full" id="sec-cibles"><div id="targets"></div></section>';
 
-    h += '<section class="full" id="sec-ou"><div><h2>Où aller maintenant ?</h2><p class="sub">Choisis l\'heure et la météo en jeu : les zones sont classées par nombre d\'insectes et d\'oiseaux que tu n\'as pas encore et qui peuvent s\'y trouver.</p></div><div id="where"></div></section>';
+    if(PAGE==="home") h += '<section class="full" id="sec-ou"><div><h2>Où aller maintenant ?</h2></div><div id="where"></div></section>';
 
-    h += '<section class="full" id="sec-collections"><div><h2>Collections</h2><p class="sub">Coche ce que tu as déjà. Ce qui manque à la liste, ajoute-le toi-même.</p></div><div id="coll"></div></section>';
+    if(PAGE==="collections") h += '<section class="full" id="sec-collections"><div id="coll"></div></section>';
 
-    h += '<section class="full" id="sec-journal"><div><h2>Journal</h2><p class="sub">Ce que tu as coché, jour par jour, et ta régularité sur la routine.</p></div><div id="journal"></div>'+backupHtml()+'</section>';
+    if(PAGE==="journal") h += '<section class="full" id="sec-journal"><div id="journal"></div>'+backupHtml()+'</section>';
 
-    h += '</div>';
+    if(PAGE==="home") h += '</div>';
     app.innerHTML = h;
     renderColl();
     renderJournal();
+    refreshCounts();
     window.scrollTo(0, y);
   }
 
@@ -518,7 +523,8 @@
     };
     var h = '<div class="tools"><input type="search" id="tq" placeholder="Chercher dans ce qui reste" value="'+esc(tq)+'" aria-label="Chercher dans ce qui reste">'+
       '<label class="chk" for="tlvl"><input type="checkbox" id="tlvl"'+(tlvl?' checked':'')+'>À mon niveau de passion</label>'+
-      '<label class="chk" for="tnow"><input type="checkbox" id="tnow"'+(tnow?' checked':'')+'>Possibles avec l\'heure et la météo de « Où aller »</label></div>';
+      '<label class="chk" for="tnow"><input type="checkbox" id="tnow"'+(tnow?' checked':'')+'>Seulement ce qui est possible avec l\'heure et la météo</label></div>';
+    if(tnow) h += condTools();
     var shown = pins.length; groups.forEach(function(g){ shown += g.rows.length; });
     h += '<p class="note"><strong>'+shown+'</strong> à chasser'+(left!==shown ? ' sur '+left+' non attrapés' : '')+'.'+
       (hiddenLvl ? ' '+hiddenLvl+' masqué'+(hiddenLvl>1?'s':'')+' car au-dessus de ton niveau de passion.' : '')+
@@ -571,15 +577,17 @@
     });
     return order.sort(function(a,b){ return (b.ok.length-a.ok.length) || (b.maybe.length-a.maybe.length) || a.z.localeCompare(b.z); });
   }
+  function condTools(){
+    return '<div class="tools"><span class="label">Heure</span>'+Object.keys(HF).map(function(k){ return '<button type="button" class="tab" data-wt="'+k+'" aria-pressed="'+(wt===k)+'">'+HF[k][1]+'</button>'; }).join("")+'</div>'+
+            '<div class="tools"><span class="label">Heure du serveur (poissons)</span>'+SERVER.map(function(t){ return '<button type="button" class="tab" data-wh="'+t[0]+'" aria-pressed="'+(wh===t[0])+'">'+t[1]+'</button>'; }).join("")+'</div>'+
+            '<div class="tools"><span class="label">Météo</span>'+Object.keys(WF).map(function(k){ return '<button type="button" class="tab" data-ww="'+k+'" aria-pressed="'+(ww===k)+'">'+WF[k][1]+'</button>'; }).join("")+'</div>';
+  }
   function renderWhere(){
     var el = document.getElementById("where"); if(!el) return;
     var open = null, prev = el.querySelectorAll("details.zone");
     if(prev.length){ open = {}; Array.prototype.forEach.call(prev, function(d){ if(d.open) open[d.getAttribute("data-z")] = 1; }); }
     var data = whereData();
-    var h = '<div class="tools"><span class="label">Heure</span>'+Object.keys(HF).map(function(k){ return '<button type="button" class="tab" data-wt="'+k+'" aria-pressed="'+(wt===k)+'">'+HF[k][1]+'</button>'; }).join("")+'</div>'+
-            '<div class="tools"><span class="label">Heure du serveur (poissons)</span>'+SERVER.map(function(t){ return '<button type="button" class="tab" data-wh="'+t[0]+'" aria-pressed="'+(wh===t[0])+'">'+t[1]+'</button>'; }).join("")+'</div>'+
-            '<div class="tools"><span class="label">Météo</span>'+Object.keys(WF).map(function(k){ return '<button type="button" class="tab" data-ww="'+k+'" aria-pressed="'+(ww===k)+'">'+WF[k][1]+'</button>'; }).join("")+'</div>';
-    h += '<p class="note">Seuls les insectes, oiseaux et poissons pas encore cochés sont comptés (insectes et oiseaux à ton niveau de passion). « Heure » vaut pour les insectes et oiseaux, « Heure du serveur » pour les poissons : un poisson sans horaire noté est compté toute la journée. Les poissons d\'événements ne sont pas classés. Une entrée dont l\'heure ou la météo n\'est pas précisée par le guide passe dans « à vérifier ».</p>';
+    var h = condTools();
     if(!data.length) h += '<div class="empty">Rien à chasser avec ces conditions : tout est coché, ou aucune espèce connue ne correspond.</div>';
     data.forEach(function(d, i){
       var isOpen = open ? !!open[d.z] : i===0;
@@ -631,7 +639,6 @@
       }).join("")+'</div>';
     h += '<div class="row" style="justify-content:space-between;width:100%"><span class="pname"><span data-pd></span> / <span data-pt></span> cochés</span></div>'+
          '<div class="bar" role="img" aria-label="Progression"><i data-bar style="width:0%"></i></div>';
-    h += '<p class="note">'+esc(L.note)+(SPECIES.indexOf(tab)>=0?' Une heure ou une météo absente veut dire que le guide ne la précise pas : les filtres heure et météo gardent ces entrées.':'')+(L.src?' Sources : '+L.src.map(function(s){ return '<a href="'+s.u+'" target="_blank" rel="noopener">'+esc(s.t)+'</a>'; }).join(', ')+'.':'')+'</p>';
     if(items.length){
       h += '<div class="tools"><input type="search" id="q" placeholder="Chercher dans '+esc(L.label.toLowerCase())+'" value="'+esc(q)+'" aria-label="Chercher">'+
            '<label class="chk" for="miss"><input type="checkbox" id="miss"'+(onlyMissing?' checked':'')+'>Seulement ce qui me manque</label>'+'<label class="chk" for="tgt"><input type="checkbox" id="tgt"'+(onlyTarget?' checked':'')+'>Seulement mes priorités ★</label>'+
@@ -747,7 +754,7 @@
       if(wb.hasAttribute("data-wt")){ var vt = wb.getAttribute("data-wt"); wt = wt===vt ? "" : vt; }
       else if(wb.hasAttribute("data-wh")){ var vh = wb.getAttribute("data-wh"); wh = wh===vh ? "" : vh; }
       else { var vw = wb.getAttribute("data-ww"); ww = ww===vw ? "" : vw; }
-      renderWhere(); renderTargets(); return;
+      saveCond(); renderWhere(); renderTargets(); return;
     }
     var tgb = e.target.closest("[data-tg]");
     if(tgb){
@@ -841,32 +848,6 @@
   render();
   setStatus("Enregistré sur cet appareil.");
 
-  /* Section navigation with scroll tracking. */
-  var nav = document.getElementById("nav"), navLinks = nav.querySelectorAll("a[data-go]"), curNav = null, ticking = false;
-  nav.addEventListener("click", function(e){
-    var a = e.target.closest("a[data-go]"); if(!a) return;
-    e.preventDefault();
-    var target = document.getElementById(a.getAttribute("data-go"));
-    var calm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if(target) target.scrollIntoView({behavior: calm ? "auto" : "smooth", block:"start"});
-  });
-  function spy(){
-    ticking = false;
-    var cur = navLinks[0];
-    Array.prototype.forEach.call(navLinks, function(a){
-      var sec = document.getElementById(a.getAttribute("data-go"));
-      if(sec && sec.getBoundingClientRect().top <= 110) cur = a;
-    });
-    if(window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) cur = navLinks[navLinks.length-1];
-    if(cur===curNav) return;
-    curNav = cur;
-    Array.prototype.forEach.call(navLinks, function(a){
-      if(a===cur) a.setAttribute("aria-current","true"); else a.removeAttribute("aria-current");
-    });
-    nav.scrollLeft = cur.offsetLeft - (nav.clientWidth - cur.offsetWidth)/2;
-  }
-  window.addEventListener("scroll", function(){ if(!ticking){ ticking = true; requestAnimationFrame(spy); } }, {passive:true});
-  spy();
 
   /* Account-backed storage lights up when available. */
   (async function(){

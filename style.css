@@ -107,7 +107,7 @@ details.grp .list>li:last-child{border-bottom:0}
 #nav::-webkit-scrollbar{display:none}
 #nav a{flex:none;text-decoration:none;color:var(--muted);font-weight:600;font-size:14px;padding:6px 12px;border-radius:99px;border:1px solid transparent}
 #nav a:hover{color:var(--ink)}
-#nav a[aria-current="true"]{background:var(--sun-soft);border-color:var(--sun);color:var(--ink)}
+#nav a[aria-current="page"],#nav a[aria-current="true"]{background:var(--sun-soft);border-color:var(--sun);color:var(--ink)}
 #nav a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 section{scroll-margin-top:72px}
 

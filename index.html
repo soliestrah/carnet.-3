@@ -8,28 +8,22 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-page="home">
 <main class="wrap">
   <header>
-    <p class="eyebrow">Heartopia · suivi perso</p>
     <h1>Carnet Heartopia</h1>
-    <p class="lede">Tes passions, tes paliers de bâtisseur et tes collections au même endroit. Tout ce que tu coches ou modifies est gardé pour la prochaine visite.</p>
   </header>
-  <nav id="nav" aria-label="Sections du carnet">
-    <a href="#sec-routine" data-go="sec-routine">Routine</a>
-    <a href="#sec-passions" data-go="sec-passions">Passions</a>
-    <a href="#sec-paliers" data-go="sec-paliers">Paliers</a>
-    <a href="#sec-cibles" data-go="sec-cibles">À chasser</a>
-    <a href="#sec-ou" data-go="sec-ou">Où aller</a>
-    <a href="#sec-collections" data-go="sec-collections">Collections</a>
-    <a href="#sec-journal" data-go="sec-journal">Journal</a>
-    <a href="profits.html">Profits →</a>
-    <a href="rapporte.html">Ce qui rapporte →</a>
+  <nav id="nav" aria-label="Navigation">
+    <a href="index.html" aria-current="page">Accueil</a>
+    <a href="collections.html">Collections</a>
+    <a href="chasser.html">À chasser</a>
+    <a href="journal.html">Journal</a>
+    <a href="profits.html">Profits</a>
+    <a href="rapporte.html">Ce qui rapporte</a>
   </nav>
   <div id="app"></div>
   <div class="status">
     <span id="save-state" aria-live="polite"></span>
-    <span>Contenu tiré de guides de la communauté. Vérifie les prix, les niveaux et les listes en jeu, ils changent avec les mises à jour.</span>
   </div>
 </main>
 <script src="data.js"></script>
