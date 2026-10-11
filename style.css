@@ -100,7 +100,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .btn:active{transform:translateY(2px);border-bottom-width:2px}
 .btn.ghost{background:var(--surface);border-color:var(--line);color:var(--ink)}
 .btn.ghost:hover{border-color:var(--accent)}
-.tools input[type=search],.addf input[type=text],.rin,.fld select,.tools select,.rp-ctl select,.rp-ctl input[type=search],.ing input,.frow input,.addm .addf input[type=text],.addm .addf input[type=number]{height:44px;border:3px solid var(--line);border-radius:99px;background:var(--surface);color:var(--ink);font:inherit;font-weight:700;padding-inline:16px;min-width:0;max-width:100%}
+.tools input[type=search],.addf input[type=text],.rin,#o-low,.fld select,.tools select,.rp-ctl select,.rp-ctl input[type=search],.ing input,.frow input,.addm .addf input[type=text],.addm .addf input[type=number]{height:44px;border:3px solid var(--line);border-radius:99px;background:var(--surface);color:var(--ink);font:inherit;font-weight:700;padding-inline:16px;min-width:0;max-width:100%}
 .tools input[type=search],.addf input[type=text]{flex:1 1 200px}
 .tools input:focus,.addf input:focus,.rin:focus,.ing input:focus,.frow input:focus{border-color:var(--accent)}
 .addf{display:flex;gap:10px;flex-wrap:wrap}
@@ -156,13 +156,16 @@ details.grp,details.zone{margin-top:6px}
 .chip.ok,.chip.rec.ok{background:var(--good);color:#1F3A6B}
 .chip.todo{background:var(--c-loc);border:2px dashed var(--accent-deep)}
 .chip.lvl,.ch.lv{background:var(--accent);color:var(--accent-ink)}
+.ch.out{background:var(--c-loc);border:2px dashed var(--accent-deep)}
+.ch.low{background:var(--accent);color:var(--accent-ink)}
 .chip.ing,.ch.ing{background:transparent;border:2px dashed var(--dash)}
 .tag{display:inline-block;font-size:12px;font-weight:800;padding:3px 11px;border-radius:99px;background:var(--c-time);color:var(--ink);white-space:nowrap}
 .tag.ok{background:var(--good);color:#1F3A6B}
 .tag.soon{background:var(--c-loc);border:2px solid var(--accent);padding:1px 9px}
 .pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
 .chips{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
-.chips li{display:inline-flex;font-size:13px;font-weight:800;padding:4px 12px;border-radius:99px;background:var(--c-wx)}
+.chips li{display:inline-flex}
+.chips .ch{font-size:13px;padding:4px 12px}
 .shop{border:3px solid var(--line);border-radius:26px;padding:12px 18px;background:var(--surface)}
 .shop summary{cursor:pointer;font-weight:800;color:var(--link)}
 
@@ -251,6 +254,11 @@ ol.plan{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;ga
 .pv strong{font-variant-numeric:tabular-nums}
 .prow .btn.ghost{height:36px;font-size:13px;margin-top:4px}
 .doneBar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 18px;border:3px solid var(--good);border-radius:26px;background:var(--good-soft);font-size:14px}
+
+.stock{display:flex;flex-direction:column;gap:12px;padding:14px 16px;background:var(--surface);border:3px solid var(--line);border-radius:28px;box-shadow:0 5px 0 var(--line)}
+.stock-t{margin:0;font-family:var(--font-display);font-weight:400;font-size:18px}
+.stock .chips{margin-top:6px}
+#o-low{height:36px;padding-inline:12px}
 
 /* ---- Page « Ce qui rapporte le plus » ---- */
 .rp-tools{display:flex;flex-direction:column;gap:10px}

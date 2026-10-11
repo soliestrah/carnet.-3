@@ -14,7 +14,8 @@
   /* ---------- État ---------- */
   function fresh(){
     return {mode:"cuisine", star:0, goal:"gain", byLevel:true, byLearned:false,
-      inv:{cuisine:{}, meubles:{}}, price:{cuisine:{}, meubles:{}}, fprice:{}, custom:[], cing:[]};
+      inv:{cuisine:{}, meubles:{}}, price:{cuisine:{}, meubles:{}}, fprice:{}, custom:[], cing:[],
+      seen:{cuisine:{}, meubles:{}}, low:2};
   }
   var S = fresh();
   (function load(){
@@ -32,10 +33,15 @@
         });
       });
       if(o.fprice && typeof o.fprice==="object") S.fprice = o.fprice;
+      if(typeof o.low==="number" && o.low>=1 && o.low<=50) S.low = Math.floor(o.low);
+      if(o.seen && typeof o.seen==="object") ["cuisine","meubles"].forEach(function(m){ if(o.seen[m] && typeof o.seen[m]==="object") S.seen[m] = o.seen[m]; });
       if(Array.isArray(o.cing)) S.cing = o.cing.filter(function(i){ return i && typeof i.id==="string" && typeof i.fr==="string"; });
       if(Array.isArray(o.custom)) S.custom = o.custom.filter(function(r){ return r && typeof r.id==="string" && typeof r.n==="string" && Array.isArray(r.need); });
     }catch(e){}
   })();
+
+  /* Un ingrédient déjà saisi une fois est « suivi » : à 0, il apparaît comme épuisé. */
+  ["cuisine","meubles"].forEach(function(m){ Object.keys(S.inv[m]).forEach(function(k){ if(S.inv[m][k]>0) S.seen[m][k] = 1; }); });
 
   var saveTimer = null, saveEl = document.getElementById("save-state");
   function queueSave(){
@@ -208,6 +214,22 @@
     return {text:parts.join(", "), n:total};
   }
 
+  /* Détail de ce qui manque pour une recette : [{k, n, l}] */
+  function missingList(cx, x){
+    var out = [];
+    x.r.need.forEach(function(rq){
+      var key = rq[0], n = rq[1], have;
+      if(key.indexOf("g:")===0){
+        have = 0; groupIds(cx, key).forEach(function(id){ have += cx.inv[id]||0; });
+        if(have<n) out.push({k:key, n:n-have, l:groupName(key)});
+      } else {
+        have = cx.inv[key]||0;
+        if(have<n) out.push({k:key, n:n-have, l:ingName(cx, key)});
+      }
+    });
+    return out;
+  }
+
   /* ---------- Affichage ---------- */
   var app = document.getElementById("app");
   var qEl = "";
@@ -360,7 +382,7 @@
 
     var anyInv = Object.keys(cx.inv).some(function(k){ return cx.inv[k]>0; });
     if(!anyInv){
-      el.innerHTML = undoHtml+'<p class="empty">Entre des quantités dans ton inventaire pour obtenir un plan.</p>';
+      el.innerHTML = undoHtml+stockHtml(cx, null)+'<p class="empty">Entre des quantités dans ton inventaire pour obtenir un plan.</p>';
       return;
     }
 
@@ -394,6 +416,8 @@
       '<div><span class="label">Valeur de vente</span><span class="big">'+fmt(res.value)+'<small> G</small></span></div>'+
       '<div><span class="label">Gain net</span><span class="big">'+(gainNet>=0?'+':'−')+fmt(Math.abs(gainNet))+'<small> G</small></span></div>'+
     '</div>';
+
+    h += stockHtml(cx, eligible);
 
     if(ids.length){
       h += '<div class="row"><button type="button" class="btn" data-cook="all">'+(S.mode==="cuisine"?"J'ai tout cuisiné":"J'ai tout fabriqué")+' : mettre l\'inventaire à jour</button></div>';
@@ -482,6 +506,40 @@
     el.innerHTML = h;
   }
 
+  /* Panneau « Stock » : épuisés, presque épuisés, et ce qu'il faut récolter pour cuisiner plus. */
+  function stockHtml(cx, eligible){
+    var seen = S.seen[S.mode] || {}, out = [], lows = [], shop = {};
+    ingList(S.mode).forEach(function(i){
+      if(i.cat==="plats") return;
+      var q = cx.inv[i.id]||0;
+      if(q>0){ if(q<=S.low) lows.push({i:i, q:q}); }
+      else if(seen[i.id]) out.push(i);
+    });
+    if(eligible){
+      var seenC = {};
+      eligible.forEach(function(x){
+        var ml = missingList(cx, x), tot = 0;
+        ml.forEach(function(e){ tot += e.n; });
+        if(!tot || tot>3) return;
+        var ck = x.r.c || x.r.id; if(seenC[ck]) return; seenC[ck] = 1;
+        ml.forEach(function(e){ var o = shop[e.k] = shop[e.k] || {l:e.l, n:0}; o.n++; });
+      });
+    }
+    var shopArr = Object.keys(shop).map(function(k){ return shop[k]; }).sort(function(a,b){ return (b.n-a.n) || a.l.localeCompare(b.l, "fr"); }).slice(0, 8);
+    if(!out.length && !lows.length && !shopArr.length && !Object.keys(seen).length) return "";
+
+    var opts = [1,2,3,5,10].map(function(n){ return '<option value="'+n+'"'+(S.low===n?' selected':'')+'>'+n+'</option>'; }).join("");
+    if([1,2,3,5,10].indexOf(S.low)<0) opts += '<option value="'+S.low+'" selected>'+S.low+'</option>';
+    var h = '<div class="stock"><div class="row" style="justify-content:space-between"><h3 class="stock-t">Ce qu\'il me manque</h3>'+
+      '<label class="chk">Stock bas : ≤ <select id="o-low" aria-label="Seuil de stock bas">'+opts+'</select></label></div>';
+    if(out.length) h += '<div><span class="label">Épuisés ('+out.length+')</span><ul class="chips">'+out.map(function(i){ return '<li>'+chip(i.fr.replace(/\s*\(.*\)\s*$/,""), "out")+'</li>'; }).join("")+'</ul></div>';
+    if(lows.length) h += '<div><span class="label">Presque épuisés</span><ul class="chips">'+lows.map(function(e){ return '<li>'+chip(e.i.fr.replace(/\s*\(.*\)\s*$/,"")+" · "+e.q, "low")+'</li>'; }).join("")+'</ul></div>';
+    if(shopArr.length) h += '<div><span class="label">À récolter ou acheter pour cuisiner plus</span><ul class="chips">'+shopArr.map(function(o){ return '<li>'+chip(o.l.replace(/\s*\(.*\)\s*$/,"")+" · "+o.n+" recette"+(o.n>1?"s":""))+'</li>'; }).join("")+'</ul></div>';
+    if(!out.length && !lows.length) h += '<p class="note">Rien d\'épuisé ni presque épuisé parmi les ingrédients que tu as déjà saisis.</p>';
+    h += '<p class="note">Un ingrédient apparaît dans « Épuisés » quand tu l\'as déjà saisi puis qu\'il est tombé à 0 (après avoir cuisiné, par exemple).</p></div>';
+    return h;
+  }
+
   function queueUpdate(){ clearTimeout(computeTimer); computeTimer = setTimeout(update, 120); }
 
   /* ---------- Événements ---------- */
@@ -490,7 +548,7 @@
     if(t.classList.contains("qty") && li){
       var id = li.getAttribute("data-id"), v = intOrNull(t.value);
       undoSnap = null; /* tu as modifié l'inventaire à la main : l'annulation ne serait plus sûre */
-      if(v) S.inv[S.mode][id] = v; else delete S.inv[S.mode][id];
+      if(v){ S.inv[S.mode][id] = v; S.seen[S.mode][id] = 1; } else delete S.inv[S.mode][id];
       li.classList.toggle("has", !!v);
       var d = li.closest("details.grp");
       if(d){
@@ -517,6 +575,7 @@
     if(t.id==="o-star"){ S.star = parseInt(t.value,10)||0; queueSave(); render(); return; }
     if(t.id==="o-goal"){ S.goal = t.value==="value" ? "value" : "gain"; queueSave(); update(); return; }
     if(t.id==="o-level"){ S.byLevel = t.checked; queueSave(); update(); return; }
+    if(t.id==="o-low"){ S.low = parseInt(t.value,10)||2; queueSave(); update(); return; }
     if(t.id==="o-learned"){ S.byLearned = t.checked; queueSave(); update(); return; }
   });
 
@@ -556,7 +615,7 @@
     if(m){ S.mode = m.getAttribute("data-mode")==="meubles" ? "meubles" : "cuisine"; qEl = ""; queueSave(); render(); return; }
     if(e.target.closest("#inv-reset")){
       if(Object.keys(S.inv[S.mode]).length && !window.confirm("Remettre toutes les quantités à zéro ?")) return;
-      S.inv[S.mode] = {}; queueSave(); render(); return;
+      S.inv[S.mode] = {}; S.seen[S.mode] = {}; queueSave(); render(); return;
     }
     var del = e.target.closest("[data-fdel]");
     if(del){
