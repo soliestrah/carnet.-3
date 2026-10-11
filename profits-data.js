@@ -1,6 +1,9 @@
 /* Données de la page Profits (profits.html).
    Cuisine : prix de vente d'un plat 1 étoile, tirés de heartopia.live (mis à jour le 13/07/2026)
-   et heartopia.life (28/07/2026). Les étoiles supérieures multiplient ce prix (voir MULT).
+   et heartopia.life (28/07/2026).
+   Prix de revente des fruits cueillis, champignons, bois et minerais : roonby.com et treyexgaming.com (janvier 2026).
+   Shiitake et cèpe à 16 : confirmés par le coût de 64 G des Grilled Shiitake et Grilled Penny Bun (heartopia.live).
+   Lait et fromage : valeurs approximatives de heartopia.life (« ~40 », « ~80 »). Les étoiles supérieures multiplient ce prix (voir MULT).
    Ces chiffres viennent de guides de la communauté : vérifie-les en jeu, ils changent avec les mises à jour.
 
    Un ingrédient : {id, fr, en, cat, p, buy, g}
@@ -62,26 +65,29 @@ PD.ING = {
     {id:"avocado",   fr:"Avocat",         en:"Avocado",    cat:"cultures", p:540, buy:180},
     /* Ajoutés à la demande : prix inconnus (à saisir dans la page), recettes pas encore dans les données. */
     {id:"pumpkin",   fr:"Citrouille",     en:"Pumpkin",    cat:"cultures", p:null, g:["veg"]},
+    {id:"weed",     fr:"Herbe (mauvaise herbe)", en:"Weed", cat:"cultures", p:null},
+    {id:"red_rose", fr:"Rose rouge",     en:"Red Rose",   cat:"cultures", p:765},
+    {id:"white_daisy", fr:"Marguerite blanche", en:"White Daisy", cat:"cultures", p:null},
     {id:"paddy",     fr:"Paddy (riz non décortiqué)", en:"Paddy", cat:"cultures", p:null},
     /* Fruits cueillis dans la nature */
-    {id:"apple",     fr:"Pomme",          en:"Apple",      cat:"fruits", p:null, g:["fruit"]},
-    {id:"blueberry", fr:"Myrtille",       en:"Blueberry",  cat:"fruits", p:null, g:["fruit"]},
-    {id:"mandarin",  fr:"Mandarine",      en:"Mandarin",   cat:"fruits", p:null, g:["fruit"]},
-    {id:"raspberry", fr:"Framboise",      en:"Raspberry",  cat:"fruits", p:null, g:["fruit"]},
+    {id:"apple",     fr:"Pomme",          en:"Apple",      cat:"fruits", p:28, g:["fruit"]},
+    {id:"blueberry", fr:"Myrtille",       en:"Blueberry",  cat:"fruits", p:16, g:["fruit"]},
+    {id:"mandarin",  fr:"Mandarine",      en:"Mandarin",   cat:"fruits", p:28, g:["fruit"]},
+    {id:"raspberry", fr:"Framboise",      en:"Raspberry",  cat:"fruits", p:26, g:["fruit"]},
     /* Champignons */
-    {id:"oyster",    fr:"Pleurote",             en:"Oyster Mushroom", cat:"champi", p:null, g:["mush"]},
-    {id:"shiitake",  fr:"Shiitake",             en:"Shiitake",        cat:"champi", p:null, g:["mush"]},
-    {id:"button",    fr:"Champignon de Paris",  en:"Button Mushroom", cat:"champi", p:null, g:["mush"]},
-    {id:"pennybun",  fr:"Cèpe",                 en:"Penny Bun",       cat:"champi", p:null, g:["mush"]},
-    {id:"truffle",   fr:"Truffe noire",         en:"Black Truffle",   cat:"champi", p:null},
+    {id:"oyster",    fr:"Pleurote",             en:"Oyster Mushroom", cat:"champi", p:16, g:["mush"]},
+    {id:"shiitake",  fr:"Shiitake",             en:"Shiitake",        cat:"champi", p:16, g:["mush"]},
+    {id:"button",    fr:"Champignon de Paris",  en:"Button Mushroom", cat:"champi", p:16, g:["mush"]},
+    {id:"pennybun",  fr:"Cèpe",                 en:"Penny Bun",       cat:"champi", p:16, g:["mush"]},
+    {id:"truffle",   fr:"Truffe noire",         en:"Black Truffle",   cat:"champi", p:99},
     /* Ferme et épicerie (prix d'achat de heartopia.life) */
     {id:"egg",       fr:"Œuf",            en:"Egg",         cat:"ferme", p:null, buy:100},
-    {id:"milk",      fr:"Lait",           en:"Milk",        cat:"ferme", p:null, buy:50},
-    {id:"cheese",    fr:"Fromage",        en:"Cheese",      cat:"ferme", p:null, buy:100},
+    {id:"milk",      fr:"Lait",           en:"Milk",        cat:"ferme", p:40, buy:50},
+    {id:"cheese",    fr:"Fromage",        en:"Cheese",      cat:"ferme", p:80, buy:100},
     {id:"butter",    fr:"Beurre",         en:"Butter",      cat:"ferme", p:null, buy:150},
     {id:"meat",      fr:"Viande",         en:"Meat",        cat:"ferme", p:null, buy:200},
     {id:"oil",       fr:"Huile de cuisson", en:"Cooking Oil", cat:"ferme", p:null, buy:100},
-    {id:"past_egg",  fr:"Œuf pasteurisé", en:"Pasteurized Egg", cat:"ferme", p:null},
+    {id:"past_egg",  fr:"Œuf pasteurisé", en:"Pasteurized Egg", cat:"ferme", p:null, buy:100},
     {id:"bean_paste",fr:"Pâte de haricots", en:"Bean Paste",  cat:"ferme", p:null},
     /* Mer */
     {id:"fish",      fr:"Poisson (n'importe lequel)",     en:"Any fish",      cat:"mer", p:null},
@@ -98,7 +104,7 @@ PD.ING = {
     {id:"indigo_sugar", fr:"Sucre indigo", en:"Indigo Sugar", cat:"sucres", p:null, buy:150},
     {id:"violet_sugar", fr:"Sucre violet", en:"Violet Sugar", cat:"sucres", p:null, buy:150},
     {id:"honey",     fr:"Miel",           en:"Honey",        cat:"sucres", p:null},
-    {id:"matcha",    fr:"Poudre de matcha", en:"Matcha Powder", cat:"sucres", p:null},
+    {id:"matcha",    fr:"Poudre de matcha", en:"Matcha Powder", cat:"sucres", p:null, buy:250},
     {id:"lemon",     fr:"Citron",         en:"Lemon",        cat:"sucres", p:null},
     /* Plats déjà cuisinés. Leur prix par défaut est celui de la recette (calculé dans profits.js). */
     {id:"d_tomato_sauce", fr:"Sauce tomate",     en:"Tomato Sauce",     cat:"plats", dish:"tomato_sauce"},
@@ -118,12 +124,12 @@ PD.ING = {
   /* Meubles : matériaux des 6 recettes « bulles » confirmées par TheGamer et Sportskeeda.
      Aucun prix de revente fiable n'est publié : à saisir toi-même dans la page. */
   meubles: [
-    {id:"timber",  fr:"Bois",            en:"Timber",         cat:"bois",   p:null},
-    {id:"qtimber", fr:"Bois de qualité", en:"Quality Timber", cat:"bois",   p:null},
-    {id:"rtimber", fr:"Bois rare",       en:"Rare Timber",    cat:"bois",   p:null},
-    {id:"branch",  fr:"Branche",         en:"Branch",         cat:"bois",   p:null},
-    {id:"stone",   fr:"Pierre",          en:"Stone",          cat:"pierre", p:null},
-    {id:"ore",     fr:"Minerai",         en:"Ore",            cat:"pierre", p:null}
+    {id:"timber",  fr:"Bois",            en:"Timber",         cat:"bois",   p:6},
+    {id:"qtimber", fr:"Bois de qualité", en:"Quality Timber", cat:"bois",   p:12},
+    {id:"rtimber", fr:"Bois rare",       en:"Rare Timber",    cat:"bois",   p:50},
+    {id:"branch",  fr:"Branche",         en:"Branch",         cat:"bois",   p:5},
+    {id:"stone",   fr:"Pierre",          en:"Stone",          cat:"pierre", p:8},
+    {id:"ore",     fr:"Minerai",         en:"Ore",            cat:"pierre", p:14}
   ]
 };
 
@@ -149,6 +155,11 @@ PD.REC = {
     {id:"coffee",         n:"Coffee",          c:"Coffee",          l:2, t:290,  rp:0, need:[["coffee",4]], out:"d_coffee"},
     {id:"latte",          n:"Latte",           c:"Latte",           l:2, t:300,  rp:0, need:[["coffee",2],["milk",2]], out:"d_latte"},
     {id:"milkshake",      n:"Milkshake",       c:"Milkshake",       l:11, t:1300, rp:6400, need:[["grape",2],["milk",2]], out:"d_milkshake"},
+    /* Ajoutées d'après heartopia.life (juillet 2026). Absentes de Collections > Cuisine : ajoute-les à la main si tu les as. */
+    {id:"grass_cake",     n:"Grass Cake",      c:"Grass Cake", l:1, t:690, rp:0, need:[["wheat",1],["weed",1],["matcha",1],["milk",1]]},
+    {id:"onsen_egg",     n:"Onsen Egg (événement Winter Frost, cuit aux bains de la montagne Onsen)", c:"Onsen Egg", l:1, t:130, rp:0, need:[["past_egg",1]]},
+    {id:"rose_tea",       n:"Rose Tea",        c:"Rose Tea",  l:12, t:1930, rp:0, need:[["tea",2],["red_rose",2]], v:1},
+    {id:"daisy_tea",      n:"Daisy Tea",       c:"Daisy Tea", l:12, t:600,  rp:0, need:[["tea",2],["white_daisy",2]], v:1},
     {id:"orig_roll",      n:"Original Roll Cake", c:"Original Roll Cake", l:1, t:550, rp:0, rt:"50 étoiles de vœu chez Doris", need:[["egg",1],["milk",1],["sugar",2]]},
     {id:"red_roll",       n:"Red Roll Cake",    c:"Red Roll Cake",    l:1, t:670, rp:0, need:[["egg",1],["milk",1],["red_sugar",2]]},
     {id:"orange_roll",    n:"Orange Roll Cake", c:"Orange Roll Cake", l:1, t:670, rp:0, need:[["egg",1],["milk",1],["orange_sugar",2]]},
@@ -183,8 +194,8 @@ PD.REC = {
     {id:"baked_eggplant_t",n:"Baked Eggplant with Meat (avec 4 tomates)", c:"Baked Eggplant with Meat", l:9, t:1230, rp:6400, need:[["eggplant",1],["meat",1],["oil",1],["tomato",4]]},
     {id:"king_crab",      n:"Steamed King Crab", c:"Steamed King Crab", l:10, t:1990, rp:6400, need:[["shellfish",3],["butter",1]]},
     {id:"golden_crab",    n:"Steamed Golden King Crab", c:"Steamed King Crab", l:10, t:2980, rp:6400, need:[["goldcrab",3],["butter",1]]},
-    {id:"black_tea",      n:"Mellow Black Tea",c:"Mellow Black Tea",l:11, t:840,  rp:6400, need:[["tea",3],["sugar",1]], out:"d_blacktea"},
-    {id:"green_tea",      n:"Refreshing Green Tea", c:"Refreshing Green Tea", l:12, t:500, rp:6400, need:[["tea",2],["honey",1],["lemon",1]], out:"d_greentea"},
+    {id:"black_tea",      n:"Mellow Black Tea",c:"Mellow Black Tea",l:11, t:840,  rp:6400, need:[["tea",3],["sugar",1]], out:"d_blacktea", v:1},
+    {id:"green_tea",      n:"Refreshing Green Tea", c:"Refreshing Green Tea", l:12, t:500, rp:6400, need:[["tea",2],["honey",1],["lemon",1]], out:"d_greentea", v:1},
     {id:"avocado_cup",    n:"Shrimp Avocado Cup", c:"Shrimp Avocado Cup", l:13, t:1560, rp:6400, need:[["avocado",2]], v:1},
     {id:"stuffed_crab",   n:"Cheese Shrimp Stuffed Crab", c:"Cheese Shrimp Stuffed Crab", l:13, t:1440, rp:6400, need:[["shellfish",2]], v:1}
   ],
