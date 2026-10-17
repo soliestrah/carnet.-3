@@ -31,7 +31,7 @@
   ORDER.forEach(function(k){ if(!state.seen[k]) state.seen[k]={}; if(!Array.isArray(state.custom[k])) state.custom[k]=[]; });
   rollDaily();
 
-  var LVKEY = {insectes:"insectes", oiseaux:"oiseaux", cuisine:"cuisine", cultures:"jardinage"};
+  var LVKEY = {insectes:"insectes", poissons:"peche", oiseaux:"oiseaux", cuisine:"cuisine", cultures:"jardinage"};
   /* Keep ticks made under older bird names. */
   function migrate(){
     if(!Array.isArray(state.log)) state.log = [];
@@ -605,7 +605,7 @@
   function whereData(){
     var zs = {}, order = [];
     ["insectes","oiseaux","poissons"].forEach(function(k){
-      var lv = state.levels[k] || 99;
+      var lv = LVKEY[k] ? (state.levels[LVKEY[k]] || 1) : 99;
       allItems(k).forEach(function(x){
         if(x.c || state.seen[k][x.n] || (x.l && x.l > lv)) return;
         var p = parse(k, x), z = zoneOf(k, x, p);
