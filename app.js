@@ -53,8 +53,9 @@
   var tab = "insectes", q = "", onlyMissing = false, onlyLevel = false, fh = [], fw = [], fl = "", so = "", jf = "all", jmax = 40, ioMsg = "", editing = null;
   var wt = "", ww = "", onlyTarget = false, tnow = false, tlvl = true, tq = "";
   var COND_KEY = "carnet-heartopia-cond";
-  try{ var cj = JSON.parse(localStorage.getItem(COND_KEY) || "{}"); wt = cj.wt || ""; ww = cj.ww || ""; }catch(e){}
-  function saveCond(){ try{ localStorage.setItem(COND_KEY, JSON.stringify({wt:wt, ww:ww})); }catch(e){} }
+  var tsort = "col";
+  try{ var cj = JSON.parse(localStorage.getItem(COND_KEY) || "{}"); wt = cj.wt || ""; ww = cj.ww || ""; if(cj.ts==="lieu") tsort = "lieu"; }catch(e){}
+  function saveCond(){ try{ localStorage.setItem(COND_KEY, JSON.stringify({wt:wt, ww:ww, ts:tsort})); }catch(e){} }
   var dbDoc = null, timer = null;
   var app = document.getElementById("app");
   var PAGE = document.body.getAttribute("data-page") || "home";
@@ -521,7 +522,8 @@
         '<input type="text" class="rin" style="width:100%;margin-top:6px" data-note="'+esc(key)+'" value="'+esc(state.notes[key]||"")+'" maxlength="200" placeholder="Note (ex. vu près du phare, raté 3 fois)" aria-label="Note pour '+esc(disp(r.k, r.x.n))+'"></div>'+
         '<button type="button" class="btn ghost" data-got="'+esc(key)+'">Attrapé</button>'+starBtn(r.k, r.x.n)+'</li>';
     };
-    var h = '<div class="tools"><input type="search" id="tq" placeholder="Chercher dans ce qui reste" value="'+esc(tq)+'" aria-label="Chercher dans ce qui reste">'+
+    var h = '<div class="tools"><span class="label">Trier par</span><button type="button" class="tab" data-ts="col" aria-pressed="'+(tsort==="col")+'">Collection</button><button type="button" class="tab" data-ts="lieu" aria-pressed="'+(tsort==="lieu")+'">Lieu</button></div>'+
+      '<div class="tools"><input type="search" id="tq" placeholder="Chercher dans ce qui reste" value="'+esc(tq)+'" aria-label="Chercher dans ce qui reste">'+
       '<label class="chk" for="tlvl"><input type="checkbox" id="tlvl"'+(tlvl?' checked':'')+'>À mon niveau de passion</label>'+
       '<label class="chk" for="tnow"><input type="checkbox" id="tnow"'+(tnow?' checked':'')+'>Seulement ce qui est possible avec l\'heure et la météo</label></div>';
     if(tnow) h += condTools();
@@ -532,6 +534,26 @@
     if(!shown){
       h += '<div class="empty">'+(left ? 'Rien ne correspond à ces filtres.' : 'Tout est attrapé. Bravo !')+'</div>';
     }
+    if(tsort==="lieu" && shown){
+      var zmap = {}, zorder = [], all = pins.slice();
+      groups.forEach(function(g){ all = all.concat(g.rows); });
+      all.forEach(function(r){
+        var p = parse(r.k, r.x), z = zoneOf(r.k, r.x, p);
+        if(/vénement|ollaboration|attractifs|givre/.test(z)) z = "Événements et saisons";
+        else if(/pas encore/.test(z)) z = "Lieu pas encore connu";
+        r.p = p;
+        if(!zmap[z]){ zmap[z] = []; zorder.push(z); }
+        zmap[z].push(r);
+      });
+      var tail = ["Autre lieu","Événements et saisons","Lieu pas encore connu"];
+      zorder.sort(function(x, y){ var tx = tail.indexOf(x), ty = tail.indexOf(y); if(tx>-1 || ty>-1) return (tx<0?-1:tx) - (ty<0?-1:ty); return zmap[y].length - zmap[x].length; });
+      zorder.forEach(function(z, i){
+        var rows = zmap[z].slice().sort(function(a, b){ return (isTarget(b.k,b.x.n)?1:0) - (isTarget(a.k,a.x.n)?1:0); });
+        var isOpen = open ? !!open[z] : i===0;
+        var np = rows.filter(function(r){ return isTarget(r.k, r.x.n); }).length;
+        h += '<details class="zone" data-z="'+esc(z)+'"'+(isOpen?' open':'')+'><summary><span class="t">'+esc(z)+'</span><span class="gcount">'+(np ? '★ '+np+' · ' : '')+rows.length+'</span></summary>'+bySub(rows, function(r){ return row(r, true); })+'</details>';
+      });
+    } else {
     if(pins.length){
       h += '<details class="zone" data-z="__pins"'+(open ? (open.__pins?' open':'') : ' open')+'><summary><span class="t">★ Mes priorités</span><span class="gcount">'+pins.length+'</span></summary><ul class="list">'+pins.map(function(r){ return row(r, true); }).join("")+'</ul></details>';
     }
@@ -539,6 +561,7 @@
       var isOpen = open ? !!open[g.k] : (!pins.length && i===0);
       h += '<details class="zone" data-z="'+g.k+'"'+(isOpen?' open':'')+'><summary><span class="t">'+esc(LISTS[g.k].label)+'</span><span class="gcount">'+g.rows.length+'</span></summary><ul class="list">'+g.rows.map(function(r){ return row(r, false); }).join("")+'</ul></details>';
     });
+    }
     el.innerHTML = h;
   }
 
@@ -552,13 +575,33 @@
   ];
   function zoneOf(k, x, p){
     if(k==="insectes") return gfr(x.g);
-    if(k==="poissons") return "Pêche · "+gfr(x.g);
+    if(k==="poissons" && /event|collaboration|not (yet )?(known|confirmed)/i.test(x.g)) return /not (yet )?(known|confirmed)/i.test(x.g) ? "Lieu pas encore connu" : "Événements";
     var l = (p.lieu||"").split(", ")[0];
     if(!l) return "Lieu pas encore connu";
     for(var i=0;i<ZONES.length;i++) if(ZONES[i][0].test(l)) return ZONES[i][1];
     return "Autre lieu";
   }
   var ZSKIP = /vénement|pas encore|ollaboration|attractifs|givre/;
+  /* Lieu précis, pour regrouper insectes, oiseaux et poissons au même endroit. */
+  var GENERIC = /^(forest|onsen mountain|flower field|fishing village|suburbs|central area|home|waterside)$/i;
+  function subOf(p){
+    var parts = (p.lieu||"").split(", ").map(function(s){ return s.replace(/ in (the )?.*$/i,"").trim(); }).filter(Boolean);
+    if(!parts.length) return "Lieu non précisé";
+    var s = parts.filter(function(x){ return !GENERIC.test(x); })[0] || parts[0];
+    if(/^forest lake( shore)?$/i.test(s)) s = "Forest Lake";
+    else if(/^suburban lake(shore)?$/i.test(s)) s = "Suburban Lake";
+    else if(/^spirit.oak pine forest$/i.test(s)) s = "Spirit Oak Pine Forest";
+    else if(/^lake shore$/i.test(s)) s = "Onsen Mountain Lake";
+    return s.charAt(0).toUpperCase()+s.slice(1);
+  }
+  function bySub(rows, rowFn){
+    var map = {}, order = [];
+    rows.forEach(function(r){ var s = subOf(r.p || parse(r.k, r.x)); if(!map[s]){ map[s] = []; order.push(s); } map[s].push(r); });
+    order.sort(function(x, y){ return map[y].length - map[x].length || x.localeCompare(y); });
+    return order.map(function(s){
+      return '<div class="subp">'+esc(s)+' <span class="gcount">'+map[s].length+'</span></div><ul class="list">'+map[s].map(rowFn).join("")+'</ul>';
+    }).join("");
+  }
   function whereData(){
     var zs = {}, order = [];
     ["insectes","oiseaux","poissons"].forEach(function(k){
@@ -594,14 +637,14 @@
       var cnt = function(a, k){ return a.filter(function(r){ return r.k===k; }).length; };
       var all = d.ok.concat(d.maybe), ni = cnt(all,"insectes"), no = cnt(all,"oiseaux"), nf = cnt(all,"poissons");
       var sub = [ni ? ni+" insecte"+(ni>1?"s":"") : "", no ? no+" oiseau"+(no>1?"x":"") : "", nf ? nf+" poisson"+(nf>1?"s":"") : ""].filter(Boolean).join(" · ");
-      h += '<details class="zone" data-z="'+esc(d.z)+'"'+(isOpen?' open':'')+'><summary><span class="t">'+esc(d.z)+'</span><span class="gcount">'+sub+(d.maybe.length ? ' (dont '+d.maybe.length+' à vérifier)' : '')+'</span></summary><ul class="list">';
-      all.forEach(function(r, j){
-        var maybe = j>=d.ok.length;
-        var det = [r.p.lieu].concat(clockOf(r.p) ? [clockOf(r.p)] : [], r.p.h.length ? [names(r.p.h, HF)] : [], r.p.w.length ? [names(r.p.w, WF)] : []).filter(Boolean).join(" · ");
-        h += '<li><span style="flex:1;min-width:0">'+esc(disp(r.k, r.x.n))+(det ? '<span class="hint">'+esc(det)+'</span>' : '')+'</span>'+
+      h += '<details class="zone" data-z="'+esc(d.z)+'"'+(isOpen?' open':'')+'><summary><span class="t">'+esc(d.z)+'</span><span class="gcount">'+sub+(d.maybe.length ? ' (dont '+d.maybe.length+' à vérifier)' : '')+'</span></summary>';
+      h += bySub(all, function(r){
+        var maybe = d.maybe.indexOf(r)>-1;
+        var det = [clockOf(r.p)].concat(r.p.h.length ? [names(r.p.h, HF)] : [], r.p.w.length ? [names(r.p.w, WF)] : []).filter(Boolean).join(" · ");
+        return '<li><span style="flex:1;min-width:0">'+esc(disp(r.k, r.x.n))+(det ? '<span class="hint">'+esc(det)+'</span>' : '')+'</span>'+
              starBtn(r.k, r.x.n)+(maybe ? '<span class="tag soon">à vérifier</span>' : '')+'<span class="tag">'+esc(LISTS[r.k].label)+'</span></li>';
       });
-      h += '</ul></details>';
+      h += '</details>';
     });
     el.innerHTML = h;
   }
@@ -748,6 +791,8 @@
       if(state.seen[gl] && !state.seen[gl][gn]){ state.seen[gl][gn] = true; logAdd(gl, gn); }
       renderColl(); renderJournal(); queueSave(); return;
     }
+    var tb = e.target.closest("[data-ts]");
+    if(tb){ tsort = tb.getAttribute("data-ts"); saveCond(); renderTargets(); return; }
     var wb = e.target.closest("[data-wt],[data-ww]");
     if(wb){
       if(wb.hasAttribute("data-wt")){ var vt = wb.getAttribute("data-wt"); wt = wt===vt ? "" : vt; }

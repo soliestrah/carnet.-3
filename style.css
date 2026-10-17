@@ -295,3 +295,7 @@ table.rp .rp-n{font-weight:800}
 
 /* Le filtre « ce qui me manque » : display:flex écrasait l'attribut hidden */
 [hidden]{display:none!important}
+
+/* Lieux précis dans une zone */
+.subp{display:flex;justify-content:space-between;gap:12px;align-items:baseline;margin:14px 0 2px;font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+details.zone>.subp:first-of-type{margin-top:0}
